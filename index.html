@@ -93,7 +93,7 @@
             <span class="metric-label">Completed</span>
             <span class="metric-icon" style="background: var(--status-completed-bg); color: var(--status-completed-text);">✓</span>
           </div>
-          <div class="metric-val" id="statCompleted">1</div>
+          <div class="metric-val" id="statCompleted">2</div>
           <div class="metric-sub">Submitted & interactive</div>
         </div>
 
@@ -102,7 +102,7 @@
             <span class="metric-label">Pending / Upcoming</span>
             <span class="metric-icon" style="background: var(--status-pending-bg); color: var(--status-pending-text);">⏳</span>
           </div>
-          <div class="metric-val" id="statPending">7</div>
+          <div class="metric-val" id="statPending">6</div>
           <div class="metric-sub">Scheduled assignments</div>
         </div>
 
@@ -119,10 +119,10 @@
         <div class="overall-progress-card">
           <div class="progress-header">
             <span>Curriculum Progress</span>
-            <span id="statPercent" class="mono">13%</span>
+            <span id="statPercent" class="mono">25%</span>
           </div>
-          <div class="progress-track" role="progressbar" aria-valuenow="13" aria-valuemin="0" aria-valuemax="100">
-            <div class="progress-fill" id="progressFill" style="width: 12.5%;"></div>
+          <div class="progress-track" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-fill" id="progressFill" style="width: 25%;"></div>
           </div>
         </div>
       </div>
@@ -135,10 +135,10 @@
           All Assignments <span class="filter-count" id="countAll">8</span>
         </button>
         <button class="filter-btn" data-filter="completed" role="tab" aria-selected="false">
-          Completed <span class="filter-count" id="countCompleted">1</span>
+          Completed <span class="filter-count" id="countCompleted">2</span>
         </button>
         <button class="filter-btn" data-filter="upcoming" role="tab" aria-selected="false">
-          Upcoming / To Do <span class="filter-count" id="countUpcoming">7</span>
+          Upcoming / To Do <span class="filter-count" id="countUpcoming">6</span>
         </button>
       </div>
 
@@ -200,36 +200,49 @@
       </article>
 
       <!-- ==========================================
-           HOMEWORK 2 (UPCOMING / IN PROGRESS)
+           HOMEWORK 2 (COMPLETED)
            ========================================== -->
-      <article class="hw-card" data-status="upcoming">
+      <article class="hw-card completed" data-status="completed">
         <div class="hw-card-top">
           <span class="hw-number-badge">HMWK 02</span>
-          <span class="hw-status-badge status-pending">Upcoming</span>
+          <span class="hw-status-badge status-done">
+            <span class="pulse-dot"></span> Completed
+          </span>
         </div>
 
-        <h2 class="hw-card-title">Random Walks & Empirical Law of Large Numbers</h2>
-        <h3 class="hw-card-subtitle">Stochastic Trajectories &bull; Diffusion &bull; Convergence Rates</h3>
+        <h2 class="hw-card-title">From Wallet Seed to Ethereum Address</h2>
+        <h3 class="hw-card-subtitle">BIP-39 &bull; BIP-32/44 &bull; secp256k1 &bull; Keccak-256 &bull; EIP-55</h3>
         
         <p class="hw-card-desc">
-          Simulation of discrete 1D and 2D symmetric random walks. Analysis of trajectory ensembles, first-passage times, return probabilities, and empirical verification of the Strong Law of Large Numbers (SLLN).
+          End-to-end practical cryptographic pipeline used in Ethereum wallets: from mnemonic sentence to binary seed, hierarchical deterministic key derivation, elliptic-curve public keys, Keccak-256 hashing, and EIP-55 mixed-case checksum encoding.
         </p>
 
+        <ul class="hw-highlights">
+          <li>Interactive live pipeline generator: Mnemonic &rarr; 512-bit Seed &rarr; Private Key &rarr; PubKey &rarr; Address</li>
+          <li>Rigorous taxonomy: Key Generation vs. Derivation, Public-Key Crypto, Hashing, Checksums & Encoding</li>
+          <li>Empirical statistical lab: Strict Avalanche Criterion (SAC), 256-bit flip matrix & collision probabilities</li>
+          <li>Historical chronology (RSA 1977 &rarr; EIP-55 2016) & Keccak-256 vs. NIST SHA3-256 padding duel</li>
+          <li>Software wallet analysis: Key lifecycle and derivation in MetaMask, Rabby, Exodus & Rainbow</li>
+        </ul>
+
         <div class="hw-tags">
-          <span class="hw-tag">Random Walks</span>
-          <span class="hw-tag">Stochastic Processes</span>
-          <span class="hw-tag">Law of Large Numbers</span>
-          <span class="hw-tag">Diffusion</span>
+          <span class="hw-tag">BIP-39</span>
+          <span class="hw-tag">BIP-32 / BIP-44</span>
+          <span class="hw-tag">secp256k1</span>
+          <span class="hw-tag">Keccak-256</span>
+          <span class="hw-tag">EIP-55 Checksum</span>
+          <span class="hw-tag">Avalanche Effect</span>
+          <span class="hw-tag">Ethereum Wallets</span>
         </div>
 
         <div class="hw-card-footer">
-          <span class="btn-disabled-action">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
+          <a href="homework2.html" class="btn-primary-action" id="openHw2">
+            <span>Open Interactive Homework</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
             </svg>
-            <span>In Progress / Scheduled</span>
-          </span>
+          </a>
         </div>
       </article>
 
@@ -481,6 +494,7 @@
       <div class="footer-links">
         <a href="https://github.com/LeleOrlandi02/StatisticsHomework26-27" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub Repository</a>
         <a href="homework1.html" class="footer-link">Homework 1 (ECC)</a>
+        <a href="homework2.html" class="footer-link">Homework 2 (Ethereum Pipeline)</a>
       </div>
     </div>
   </footer>

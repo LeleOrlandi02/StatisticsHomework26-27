@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Homework 2: From Wallet Seed to Ethereum Address. Complete cryptographic pipeline, BIP-39/32/44 key derivation, secp256k1 arithmetic, Keccak-256 hashing, EIP-55 checksum, and statistical properties.">
+  <meta name="author" content="Emanuele Orlandi">
+  <title>HMWK 2 — From Wallet Seed to Ethereum Address | Statistics Portfolio 2026/2027</title>
+
+  <!-- Global Design System -->
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    /* Dedicated Custom Styles for Homework 2 */
+    .hw2-container {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+    }
+
+    .pipeline-hero {
+      margin-bottom: 2rem;
+    }
+
+    .pipeline-flow-banner {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin: 24px 0;
+      box-shadow: var(--shadow-md);
+      overflow-x: auto;
+    }
+
+    .flow-steps-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-width: 820px;
+      gap: 12px;
+    }
+
+    .flow-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      min-width: 110px;
+      transition: var(--transition-normal);
+    }
+
+    .flow-node.active {
+      border-color: var(--accent-primary);
+      background: color-mix(in srgb, var(--accent-primary) 8%, var(--bg-card));
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    .flow-node-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .flow-node-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .flow-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: var(--accent-primary);
+      font-weight: 700;
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+
+    .flow-arrow-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      background: var(--tag-bg);
+      border: 1px solid var(--tag-border);
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-bottom: 2px;
+    }
+
+    /* Interactive Pipeline Box */
+    .workbench-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .workbench-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .workbench-title-group h2 {
+      margin: 0;
+      font-size: 1.35rem;
+      color: var(--text-main);
+    }
+
+    .workbench-title-group p {
+      margin: 4px 0 0;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn-action {
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-strong);
+      background: var(--bg-secondary);
+      color: var(--text-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition-fast);
+    }
+
+    .btn-action:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+    }
+
+    .btn-action.primary {
+      background: var(--accent-primary);
+      color: #ffffff;
+      border-color: transparent;
+    }
+
+    .btn-action.primary:hover {
+      background: var(--accent-secondary);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    /* Input controls grid */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .input-field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-field-group label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .input-text, .input-select {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-secondary);
+      color: var(--text-main);
+      width: 100%;
+      box-sizing: border-box;
+      transition: border-color var(--transition-fast);
+    }
+
+    .input-text:focus, .input-select:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+
+    /* Word chips */
+    .mnemonic-chips {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 8px;
+      background: var(--bg-secondary);
+      padding: 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      margin-top: 8px;
+    }
+
+    .word-chip {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+    }
+
+    .word-num {
+      color: var(--accent-primary);
+      font-weight: 700;
+      font-size: 0.75rem;
+      min-width: 18px;
+    }
+
+    .word-text {
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    /* Pipeline Step Cards */
+    .step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      margin-bottom: 18px;
+      position: relative;
+      transition: border-color var(--transition-fast);
+    }
+
+    .step-card:hover {
+      border-color: var(--border-accent);
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .step-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent-primary);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .step-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .step-primitive-tag {
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      background: var(--tag-bg);
+      color: var(--tag-text);
+      border: 1px solid var(--tag-border);
+      font-weight: 600;
+    }
+
+    .step-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    /* Data output box */
+    .data-output-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+
+    .data-output-label {
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .data-output-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text-main);
+      word-break: break-all;
+      line-height: 1.45;
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      color: var(--text-muted);
+      padding: 2px 7px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .copy-btn:hover {
+      color: var(--accent-primary);
+      border-color: var(--accent-primary);
+    }
+
+    .copy-btn.copied {
+      color: #10b981;
+      border-color: #10b981;
+    }
+
+    /* EIP-55 Inspector Grid */
+    .eip55-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+      gap: 4px;
+      margin: 12px 0;
+      background: var(--bg-secondary);
+      padding: 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .eip55-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 2px;
+      border-radius: 4px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      text-align: center;
+      transition: transform 0.1s ease;
+    }
+
+    .eip55-cell:hover {
+      transform: scale(1.1);
+      z-index: 2;
+    }
+
+    .eip55-cell.upper {
+      border-color: var(--accent-primary);
+      background: color-mix(in srgb, var(--accent-primary) 12%, var(--bg-card));
+    }
+
+    .eip55-cell.upper .eip55-final {
+      color: var(--accent-primary);
+      font-weight: 800;
+    }
+
+    .eip55-cell.lower .eip55-final {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    .eip55-cell.digit .eip55-final {
+      color: var(--text-muted);
+    }
+
+    .eip55-final {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.05rem;
+    }
+
+    .eip55-sub {
+      font-size: 0.62rem;
+      color: var(--text-light);
+      margin-top: 2px;
+    }
+
+    /* Final Address Showcase Banner */
+    .address-showcase {
+      margin-top: 14px;
+      padding: 16px 20px;
+      border-radius: var(--radius-md);
+      border: 2px solid #10b981;
+      background: color-mix(in srgb, #10b981 8%, var(--bg-card));
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .address-showcase-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #10b981;
+    }
+
+    .address-showcase-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main);
+      word-break: break-all;
+    }
+
+    /* Taxonomy & Comparison Cards */
+    .taxonomy-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 18px;
+      margin: 24px 0;
+    }
+
+    .taxonomy-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .taxonomy-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .taxonomy-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--accent-glow);
+      color: var(--accent-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .taxonomy-card h3 {
+      margin: 0;
+      font-size: 1.08rem;
+      color: var(--text-main);
+    }
+
+    .taxonomy-card p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin-bottom: 14px;
+    }
+
+    .taxonomy-meta-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 0.82rem;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .taxonomy-meta-list li {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 4px;
+    }
+
+    .taxonomy-meta-list span:first-child {
+      color: var(--text-muted);
+    }
+
+    .taxonomy-meta-list span:last-child {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* Comparison Table */
+    .table-container {
+      overflow-x: auto;
+      margin: 20px 0;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .styled-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      background: var(--bg-card);
+    }
+
+    .styled-table th, .styled-table td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .styled-table th {
+      background: var(--bg-secondary);
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .styled-table tr:hover {
+      background: color-mix(in srgb, var(--accent-primary) 3%, var(--bg-card));
+    }
+
+    /* Statistical Lab & Avalanche */
+    .lab-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .bit-matrix-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+    }
+
+    .bit-grid {
+      display: grid;
+      grid-template-columns: repeat(16, 1fr);
+      gap: 3px;
+      margin-top: 12px;
+    }
+
+    .bit-cell {
+      aspect-ratio: 1;
+      border-radius: 2px;
+      transition: background-color 0.15s ease;
+    }
+
+    .bit-cell.same {
+      background-color: #10b981; /* Green = 0 diff */
+      opacity: 0.75;
+    }
+
+    .bit-cell.flipped {
+      background-color: #ef4444; /* Red = 1 flip */
+      box-shadow: 0 0 4px rgba(239, 68, 68, 0.6);
+    }
+
+    .stat-badge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .stat-badge {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      text-align: center;
+    }
+
+    .stat-badge-title {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    .stat-badge-val {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-top: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Timeline Section */
+    .timeline {
+      position: relative;
+      margin: 30px 0 10px;
+      padding-left: 28px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border-subtle);
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -23px;
+      top: 4px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent-primary);
+      border: 2px solid var(--bg-card);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    .timeline-date {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent-primary);
+      margin-bottom: 2px;
+    }
+
+    .timeline-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin: 0 0 4px;
+    }
+
+    .timeline-desc {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    /* Duel Box */
+    .duel-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .duel-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 14px;
+    }
+
+    .duel-column {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+    }
+
+    .duel-column h4 {
+      margin: 0 0 8px;
+      font-size: 0.92rem;
+      color: var(--accent-primary);
+    }
+
+    /* Status indicators */
+    .status-msg {
+      font-size: 0.82rem;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      display: inline-block;
+      margin-top: 8px;
+    }
+
+    .status-msg.computing {
+      background: var(--status-pending-bg);
+      color: var(--status-pending-text);
+      border: 1px solid var(--status-pending-border);
+    }
+
+    .status-msg.success {
+      background: var(--status-completed-bg);
+      color: var(--status-completed-text);
+      border: 1px solid var(--status-completed-border);
+    }
+
+    .status-msg.error {
+      background: rgba(239, 68, 68, 0.12);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .badge-pill {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-pill.success {
+      background: var(--status-completed-bg);
+      color: var(--status-completed-text);
+      border: 1px solid var(--status-completed-border);
+    }
+
+    .badge-pill.error {
+      background: rgba(239, 68, 68, 0.12);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .nav-back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-primary);
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      transition: var(--transition-fast);
+    }
+
+    .nav-back-btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-primary);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Light Glow Effect -->
+  <div class="bg-ambient" aria-hidden="true">
+    <div class="ambient-blob ambient-blob-1"></div>
+    <div class="ambient-blob ambient-blob-2"></div>
+  </div>
+
+  <!-- Navigation Bar -->
+  <nav class="site-nav" aria-label="Main Navigation">
+    <div class="container nav-content">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <a href="index.html" class="nav-back-btn" title="Back to Portfolio">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>All Assignments</span>
+        </a>
+
+        <div class="brand-divider" style="width: 1px; height: 20px; background: var(--border-subtle);"></div>
+
+        <a href="index.html" class="nav-brand">
+          <span class="brand-title">Statistics Laboratory</span>
+          <span class="brand-subtitle">Homework 2 &bull; 2026/2027</span>
+        </a>
+      </div>
+
+      <div class="nav-actions">
+        <div class="nav-badge-author">
+          <span>Student:</span>
+          <strong>Emanuele Orlandi</strong>
+          <span class="mono">#2021953</span>
+        </div>
+
+        <a href="https://github.com/LeleOrlandi02/StatisticsHomework26-27" target="_blank" rel="noopener noreferrer" class="github-link-btn" title="GitHub Repository">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+        </a>
+
+        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle Dark/Light Mode" title="Toggle theme">
+          <svg class="theme-icon-light" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="12" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="theme-icon-dark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="hw2-container">
+
+    <!-- Hero Header -->
+    <header class="pipeline-hero">
+      <div class="hero-pill">
+        <span class="hero-pill-dot"></span>
+        <span>HMWK 2 &bull; Cryptographic Primitives & Statistical Properties</span>
+      </div>
+
+      <h1 class="hero-title" style="margin-top: 10px;">
+        From Wallet Seed to <br>
+        <span class="gradient-text">Ethereum Address</span>
+      </h1>
+
+      <p class="hero-description" style="max-width: 860px;">
+        An end-to-end interactive exploration of the practical cryptographic pipeline powering Ethereum wallets (such as MetaMask, Rabby, Rainbow, and Exodus). Follow entropy through human-readable mnemonics, PBKDF2 key stretching, hierarchical deterministic derivation, elliptic-curve scalar multiplication, Keccak-256 hashing, and EIP-55 mixed-case checksum encoding.
+      </p>
+    </header>
+
+    <!-- Visual Pipeline Architecture Diagram -->
+    <section class="pipeline-flow-banner" aria-label="Cryptographic Pipeline Flow Diagram">
+      <div class="flow-steps-diagram">
+        <div class="flow-node active">
+          <span class="flow-node-title">Mnemonic</span>
+          <span class="flow-node-sub">12/24 words</span>
+        </div>
+        <div class="flow-arrow">
+          <span class="flow-arrow-label">BIP-39</span>
+          <span>&rarr;</span>
+        </div>
+        <div class="flow-node active">
+          <span class="flow-node-title">512-bit Seed</span>
+          <span class="flow-node-sub">PBKDF2 SHA-512</span>
+        </div>
+        <div class="flow-arrow">
+          <span class="flow-arrow-label">BIP-32 / BIP-44</span>
+          <span>&rarr;</span>
+        </div>
+        <div class="flow-node active">
+          <span class="flow-node-title">Private Key</span>
+          <span class="flow-node-sub">256-bit scalar</span>
+        </div>
+        <div class="flow-arrow">
+          <span class="flow-arrow-label">secp256k1</span>
+          <span>&rarr;</span>
+        </div>
+        <div class="flow-node active">
+          <span class="flow-node-title">Public Key</span>
+          <span class="flow-node-sub">Q = k &times; G</span>
+        </div>
+        <div class="flow-arrow">
+          <span class="flow-arrow-label">Keccak-256</span>
+          <span>&rarr;</span>
+        </div>
+        <div class="flow-node active">
+          <span class="flow-node-title">Raw Address</span>
+          <span class="flow-node-sub">Last 20 bytes</span>
+        </div>
+        <div class="flow-arrow">
+          <span class="flow-arrow-label">EIP-55</span>
+          <span>&rarr;</span>
+        </div>
+        <div class="flow-node active" style="border-color: #10b981; background: color-mix(in srgb, #10b981 10%, var(--bg-card));">
+          <span class="flow-node-title" style="color: #10b981;">Checksum Address</span>
+          <span class="flow-node-sub">Mixed-case 0x...</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 1: THE INTERACTIVE CRYPTOGRAPHIC PIPELINE
+         ==================================================================== -->
+    <section class="workbench-card" aria-label="Interactive Pipeline Workbench">
+      <div class="workbench-header">
+        <div class="workbench-title-group">
+          <h2>1. Live Cryptographic Pipeline Workbench</h2>
+          <p>Generate fresh entropy, enter custom words, or test standard known vectors with real-time browser cryptographic evaluation.</p>
+        </div>
+        <div class="btn-group">
+          <button class="btn-action primary" id="btnGen12">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+            Generate 12 Words
+          </button>
+          <button class="btn-action" id="btnGen24">Generate 24 Words</button>
+          <button class="btn-action" id="btnMetaMaskVector" title="MetaMask & BIP-44 default all-abandon test vector">Canonical Test Vector</button>
+        </div>
+      </div>
+
+      <!-- Controls: Mnemonic, Passphrase, Derivation Path -->
+      <div class="controls-grid">
+        <div class="input-field-group" style="grid-column: 1 / -1;">
+          <label for="mnemonicInput">
+            <span>BIP-39 Mnemonic Phrase:</span>
+            <span id="mnemonicValidationBadge" class="badge-pill success">Valid 12-Word Mnemonic (Checksum OK)</span>
+          </label>
+          <input type="text" id="mnemonicInput" class="input-text" value="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about" autocomplete="off" spellcheck="false">
+          
+          <!-- Word Chips Display -->
+          <div class="mnemonic-chips" id="mnemonicChipsContainer"></div>
+        </div>
+
+        <div class="input-field-group">
+          <label for="passphraseInput">
+            <span>Optional Passphrase (13th/25th Word Salt):</span>
+            <span class="note" style="font-size: 0.72rem;">BIP-39 Salt Extension</span>
+          </label>
+          <input type="text" id="passphraseInput" class="input-text" placeholder="Optional passphrase (defaults to empty)" value="" autocomplete="off">
+        </div>
+
+        <div class="input-field-group">
+          <label for="derivationPathInput">
+            <span>BIP-44 HD Derivation Path:</span>
+            <span class="mono" style="font-size: 0.75rem; color: var(--accent-primary);">m / 44' / 60' / 0' / 0 / i</span>
+          </label>
+          <input type="text" id="derivationPathInput" class="input-text" value="m/44'/60'/0'/0/0" autocomplete="off">
+        </div>
+
+        <div class="input-field-group">
+          <label for="accountIndexInput">
+            <span>Account Index (i):</span>
+            <span class="note" style="font-size: 0.72rem;">MetaMask Account Switcher</span>
+          </label>
+          <div style="display: flex; gap: 8px;">
+            <input type="number" id="accountIndexInput" class="input-text" min="0" max="1000" value="0">
+            <button class="btn-action primary" id="btnRecalculate" style="white-space: nowrap;">Recalculate</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="pipelineStatus" class="status-msg success">All 5 cryptographic transformations verified successfully!</div>
+
+      <!-- Step 1 Card -->
+      <div class="step-card" style="margin-top: 20px;">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <span class="step-badge">1</span>
+            <span class="step-name">BIP-39: Mnemonic Sentence & 512-bit Seed Generation</span>
+          </div>
+          <span class="step-primitive-tag">Key Stretching (PBKDF2-HMAC-SHA512)</span>
+        </div>
+        <p class="step-desc">
+          Entropy ($128$ or $256$ bits) is combined with a short SHA-256 checksum ($4$ or $8$ bits) and grouped into 11-bit chunks, each indexing a word in the $2048$-word dictionary. The mnemonic is transformed into a cryptographically secure 512-bit (64-byte) binary seed via <strong>PBKDF2-HMAC-SHA512</strong> with <strong>2048 iterations</strong> and salt <span class="mono">"mnemonic" + passphrase</span>.
+        </p>
+
+        <div class="data-output-box">
+          <div class="data-output-label">
+            <span>Raw Entropy (128 bits / 16 bytes)</span>
+            <button class="copy-btn" data-copy-target="outEntropyHex">Copy</button>
+          </div>
+          <div class="data-output-val" id="outEntropyHex">00000000000000000000000000000000</div>
+        </div>
+
+        <div class="data-output-box">
+          <div class="data-output-label">
+            <span>BIP-39 Binary Seed (512 bits / 64 bytes)</span>
+            <button class="copy-btn" data-copy-target="outSeedHex">Copy</button>
+          </div>
+          <div class="data-output-val" id="outSeedHex">5eb00bbddcf069084889a8ab9155568165f5c453ccb85e70811aaed6f6da5fc19a5ac40b389cd370d086206dec8aa6c43daea6690f20ad3d8d48b2d2ce9e38e4</div>
+        </div>
+      </div>
+
+      <!-- Step 2 Card -->
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <span class="step-badge">2</span>
+            <span class="step-name">BIP-32 & BIP-44: Hierarchical Deterministic Key Derivation</span>
+          </div>
+          <span class="step-primitive-tag">Key Derivation Function (CKDpriv)</span>
+        </div>
+        <p class="step-desc">
+          BIP-32 derives a tree of keys from the master seed using <span class="mono">HMAC-SHA512</span>. The standard Ethereum derivation path defined in BIP-44 is <span class="mono">m / 44' / 60' / 0' / 0 / i</span>, where <span class="mono">44'</span> is the BIP-44 purpose, <span class="mono">60'</span> is Ethereum's coin type, <span class="mono">0'</span> is the account, <span class="mono">0</span> is external chain, and <span class="mono">i</span> is the address index. Hardened indices ($i \ge 2^{31}$) prevent compromised child keys from leaking parent private keys.
+        </p>
+
+        <div class="data-output-box">
+          <div class="data-output-label">
+            <span>Master Private Key (m)</span>
+            <button class="copy-btn" data-copy-target="outMasterPriv">Copy</button>
+          </div>
+          <div class="data-output-val" id="outMasterPriv">1837c1be8e2995ec11cda2b066151be2cfb48adf9e47b151d46adab3a21cdf67</div>
+        </div>
+
+        <div class="data-output-box">
+          <div class="data-output-label">
+            <span>Derived Child Private Key (k at <span id="outDerivedPath">m/44'/60'/0'/0/0</span>)</span>
+            <button class="copy-btn" data-copy-target="outPrivateKeyHex">Copy</button>
+          </div>
+          <div class="data-output-val" id="outPrivateKeyHex" style="color: var(--accent-primary); font-weight: 700;">1ab42cc412b618bdea3a599e3c9bae199ebf030895b039e9db1e30dafb12b727</div>
+        </div>
+
+        <div class="data-output-box">
+          <div class="data-output-label">
+            <span>Child Chain Code (c)</span>
+            <button class="copy-btn" data-copy-target="outChainCodeHex">Copy</button>
+          </div>
+          <div class="data-output-val" id="outChainCodeHex">7923408dadd3c7b56eed15567707ae5e5dca089de972e07f3b860450e2a3b70e</div>
+        </div>
+      </div>
+
+      <!-- Step 3 Card -->
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <span class="step-badge">3</span>
+            <span class="step-name">secp256k1: Elliptic-Curve Public-Key Cryptography</span>
+          </div>
+          <span class="step-primitive-tag">Asymmetric Cryptography (ECDLP)</span>
+        </div>
+        <p class="step-desc">
+          The public key is computed as a scalar multiplication on the elliptic curve <span class="mono">y² &equiv; x³ + 7 (mod p)</span>: <span class="mono">Q = k &times; G</span>. Point addition and doubling are computed over the finite field $\mathbb{F}_p$. Ethereum uses the <strong>65-byte uncompressed public key</strong> (<span class="mono">0x04 || x || y</span>), where the <span class="mono">0x04</span> prefix identifies uncompressed representation.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="data-output-box">
+            <div class="data-output-label">Public Key Coordinate X (256 bits)</div>
+            <div class="data-output-val" id="outPubX">37b0bb7a8288d38ed49a524b5dc98cff3eb5ca824c9f9dc0dfdb3d9cd600f299</div>
+          </div>
+          <div class="data-output-box">
+            <div class="data-output-label">Public Key Coordinate Y (256 bits)</div>
+            <div class="data-output-val" id="outPubY">a6179912b7451c09896c4098eca7ce6b2e58330672795e847c4d6af44e024230</div>
+          </div>
+        </div>
+
+        <div class="data-output-box">
+          <div class="data-output-label">
+            <span>Uncompressed Public Key (65 bytes with 0x04 prefix)</span>
+            <button class="copy-btn" data-copy-target="outUncompressedPub">Copy</button>
+          </div>
+          <div class="data-output-val" id="outUncompressedPub">0437b0bb7a8288d38ed49a524b5dc98cff3eb5ca824c9f9dc0dfdb3d9cd600f299a6179912b7451c09896c4098eca7ce6b2e58330672795e847c4d6af44e024230</div>
+        </div>
+
+        <div class="data-output-box">
+          <div class="data-output-label">
+            <span>Compressed Public Key (33 bytes with 0x02/0x03 parity prefix)</span>
+            <button class="copy-btn" data-copy-target="outCompressedPub">Copy</button>
+          </div>
+          <div class="data-output-val" id="outCompressedPub">0237b0bb7a8288d38ed49a524b5dc98cff3eb5ca824c9f9dc0dfdb3d9cd600f299</div>
+        </div>
+      </div>
+
+      <!-- Step 4 Card -->
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <span class="step-badge">4</span>
+            <span class="step-name">Keccak-256: Hashing & Address Truncation</span>
+          </div>
+          <span class="step-primitive-tag">Cryptographic Hash Function</span>
+        </div>
+        <p class="step-desc">
+          Ethereum discards the first byte (<span class="mono">0x04</span>) of the uncompressed public key and hashes the remaining 64 bytes (<span class="mono">x || y</span>) using <strong>Keccak-256</strong>. The resulting 32-byte digest is truncated: only the <strong>last 20 bytes</strong> (40 hexadecimal characters) are retained as the raw Ethereum address.
+        </p>
+
+        <div class="data-output-box">
+          <div class="data-output-label">
+            <span>Full 32-Byte Keccak-256 Digest: Keccak(x || y)</span>
+            <button class="copy-btn" data-copy-target="outKeccakDigest">Copy</button>
+          </div>
+          <div class="data-output-val" id="outKeccakDigest">b74d436ec08a1846b0b3060c9858effd232b4033e47d90003d41ec34ecaeda94</div>
+        </div>
+
+        <div class="data-output-box">
+          <div class="data-output-label">
+            <span>Raw Lowercase Ethereum Address (Rightmost 20 Bytes / 40 Hex Digits)</span>
+            <button class="copy-btn" data-copy-target="outRawAddress">Copy</button>
+          </div>
+          <div class="data-output-val" id="outRawAddress">0x9858effd232b4033e47d90003d41ec34ecaeda94</div>
+        </div>
+      </div>
+
+      <!-- Step 5 Card -->
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <span class="step-badge">5</span>
+            <span class="step-name">EIP-55: Mixed-Case Checksum Encoding</span>
+          </div>
+          <span class="step-primitive-tag">Error-Detecting Checksum Code</span>
+        </div>
+        <p class="step-desc">
+          To prevent catastrophic typo mistakes during copy-pasting, EIP-55 introduces mixed-case capitalization. The lowercase address string (without <span class="mono">0x</span>) is hashed with Keccak-256. For each character $i$: if it is a letter (<span class="mono">a-f</span>) and the $i$-th nibble of the hash is $\ge 8$, it is converted to uppercase; otherwise it remains lowercase.
+        </p>
+
+        <!-- EIP-55 Inspector Grid -->
+        <div style="margin-bottom: 8px; font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+          <span>Nibble-by-Nibble Evaluation (hover over cells for rule inspection):</span>
+          <span><span style="color: var(--accent-primary); font-weight: 700;">■</span> Uppercase ($h_i \ge 8$) &nbsp; <span style="color: var(--text-main); font-weight: 700;">■</span> Lowercase ($h_i < 8$)</span>
+        </div>
+        <div class="eip55-grid" id="eip55InspectorGrid"></div>
+
+        <!-- Verified Showcase Banner -->
+        <div class="address-showcase">
+          <div>
+            <div class="address-showcase-label">Verified Checksummed Ethereum Address (EIP-55)</div>
+            <div class="address-showcase-val" id="outChecksummedAddress">0x9858EfFD232B4033E47d90003D41EC34EcaEda94</div>
+          </div>
+          <button class="btn-action primary copy-btn" data-copy-target="outChecksummedAddress">
+            <span>Copy Address</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 2: CONCEPTUAL TAXONOMY: THE 5 FUNDAMENTAL PRIMITIVES
+         ==================================================================== -->
+    <section class="workbench-card" aria-label="Conceptual Taxonomy">
+      <div class="workbench-title-group" style="margin-bottom: 16px;">
+        <h2>2. Conceptual Taxonomy: Clarifying the 5 Core Primitives</h2>
+        <p>A rigorous distinction between key generation, key derivation, asymmetric public-key cryptography, hashing, checksums, and encoding.</p>
+      </div>
+
+      <div class="taxonomy-grid">
+        <!-- 1. Key Gen vs Derivation -->
+        <div class="taxonomy-card">
+          <div>
+            <div class="taxonomy-card-header">
+              <div class="taxonomy-icon">🔑</div>
+              <div>
+                <h3>Key Generation vs. Derivation</h3>
+                <span class="flow-node-sub">Entropy Creation vs. Deterministic Expansion</span>
+              </div>
+            </div>
+            <p>
+              <strong>Key Generation</strong> creates brand-new unpredictability using a Cryptographically Secure Pseudo-Random Number Generator (CSPRNG). In Ethereum, 128 or 256 bits of true physical/OS entropy are generated once.
+              <br><br>
+              <strong>Key Derivation</strong> is a deterministic algorithm (KDF/PRF like PBKDF2 or HMAC-SHA512) that takes an existing secret and deterministically computes one or infinite child keys. Given the exact same mnemonic and derivation path, the same keys are always reproduced.
+            </p>
+          </div>
+          <ul class="taxonomy-meta-list">
+            <li><span>Reversible?</span> <span>No (One-way)</span></li>
+            <li><span>Deterministic?</span> <span>Generation: No &bull; Derivation: Yes</span></li>
+            <li><span>Ethereum Primitive:</span> <span>CSPRNG &rarr; BIP-39 &rarr; BIP-32</span></li>
+          </ul>
+        </div>
+
+        <!-- 2. Public-Key Cryptography -->
+        <div class="taxonomy-card">
+          <div>
+            <div class="taxonomy-card-header">
+              <div class="taxonomy-icon">🔒</div>
+              <div>
+                <h3>Public-Key Cryptography</h3>
+                <span class="flow-node-sub">Asymmetric Trapdoor Functions & Signatures</span>
+              </div>
+            </div>
+            <p>
+              Asymmetric cryptography relies on mathematical hard problems. On secp256k1, multiplying a private scalar $k$ by generator point $G$ gives public key $Q = kG$. While computing $Q$ takes fractions of a millisecond, recovering $k$ from $Q$ requires solving the <strong>Elliptic Curve Discrete Logarithm Problem (ECDLP)</strong>, which is computationally infeasible ($O(2^{128})$ operations with Pollard's rho).
+              <br><br>
+              This allows transaction signing via <strong>ECDSA</strong>: proving ownership without ever revealing the private key.
+            </p>
+          </div>
+          <ul class="taxonomy-meta-list">
+            <li><span>Trapdoor Inverse?</span> <span>Yes (With private key)</span></li>
+            <li><span>Mathematical Basis:</span> <span>ECDLP on secp256k1</span></li>
+            <li><span>Ethereum Primitive:</span> <span>ECDSA & secp256k1</span></li>
+          </ul>
+        </div>
+
+        <!-- 3. Cryptographic Hashing -->
+        <div class="taxonomy-card">
+          <div>
+            <div class="taxonomy-card-header">
+              <div class="taxonomy-icon">⚡</div>
+              <div>
+                <h3>Cryptographic Hashing</h3>
+                <span class="flow-node-sub">Irreversible Fixed-Length Compression</span>
+              </div>
+            </div>
+            <p>
+              A cryptographic hash function takes an arbitrary-length byte stream and produces a fixed-size digest (e.g. 256 bits).
+              Crucial security properties:
+              <br>
+              1. <strong>Pre-image resistance:</strong> impossible to find $m$ given $h = H(m)$.<br>
+              2. <strong>Second pre-image resistance:</strong> impossible to find $m_2 \ne m_1$ such that $H(m_1) = H(m_2)$.<br>
+              3. <strong>Collision resistance:</strong> impossible to find any pair $(m_1, m_2)$ with $H(m_1) = H(m_2)$.
+            </p>
+          </div>
+          <ul class="taxonomy-meta-list">
+            <li><span>Invertible?</span> <span>Strictly Impossible</span></li>
+            <li><span>Output Size:</span> <span>Fixed 256 bits (32 bytes)</span></li>
+            <li><span>Ethereum Primitive:</span> <span>Keccak-256</span></li>
+          </ul>
+        </div>
+
+        <!-- 4. Checksums -->
+        <div class="taxonomy-card">
+          <div>
+            <div class="taxonomy-card-header">
+              <div class="taxonomy-icon">🛡️</div>
+              <div>
+                <h3>Checksums</h3>
+                <span class="flow-node-sub">Redundancy for Human Error Detection</span>
+              </div>
+            </div>
+            <p>
+              Checksums are error-detecting codes. Unlike cryptographic hashes which protect against malicious adversaries altering data, checksums are engineered to detect accidental human typos, letter transpositions, and cut-and-paste omissions.
+              <br><br>
+              <strong>EIP-55</strong> encodes error detection directly into the capitalization of the hex characters, ensuring 100% detection of single-character errors without requiring extra characters or breaking legacy hexadecimal formats.
+            </p>
+          </div>
+          <ul class="taxonomy-meta-list">
+            <li><span>Primary Goal:</span> <span>Detect transcription typos</span></li>
+            <li><span>Length Overhead:</span> <span>0 extra characters (in-band)</span></li>
+            <li><span>Ethereum Primitive:</span> <span>EIP-55 mixed-case</span></li>
+          </ul>
+        </div>
+
+        <!-- 5. Encoding -->
+        <div class="taxonomy-card">
+          <div>
+            <div class="taxonomy-card-header">
+              <div class="taxonomy-icon">🔤</div>
+              <div>
+                <h3>Encoding</h3>
+                <span class="flow-node-sub">Bijective, Reversible Data Formatting</span>
+              </div>
+            </div>
+            <p>
+              Encoding is a completely reversible, 1-to-1 bijection between raw binary data and a character representation suitable for display or transmission.
+              <br><br>
+              Examples include <strong>Hexadecimal</strong> (base-16), <strong>Base58Check</strong> (Bitcoin), and <strong>Bech32</strong>. Encoding requires no secret key and provides zero confidentiality; its purpose is purely syntactic compatibility.
+            </p>
+          </div>
+          <ul class="taxonomy-meta-list">
+            <li><span>Reversible?</span> <span>Yes, 100% reversible</span></li>
+            <li><span>Requires Secret?</span> <span>No</span></li>
+            <li><span>Ethereum Primitive:</span> <span>Hexadecimal (0x...)</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Comparative Summary Table -->
+      <div class="table-container">
+        <table class="styled-table">
+          <thead>
+            <tr>
+              <th>Cryptographic Concept</th>
+              <th>Deterministic?</th>
+              <th>Reversible?</th>
+              <th>Requires Secret?</th>
+              <th>Collision Resistant?</th>
+              <th>Primary Role in Ethereum Wallet</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Key Generation</strong></td>
+              <td>No (CSPRNG)</td>
+              <td>No</td>
+              <td>No (Produces secret)</td>
+              <td>N/A (Uniform distribution)</td>
+              <td>Generates initial entropy (BIP-39 mnemonic)</td>
+            </tr>
+            <tr>
+              <td><strong>Key Derivation</strong></td>
+              <td>Yes</td>
+              <td>No (One-way KDF)</td>
+              <td>Yes (Seed / Master Key)</td>
+              <td>Yes (Pseudo-random)</td>
+              <td>Expands seed into infinite child keys (BIP-32/44)</td>
+            </tr>
+            <tr>
+              <td><strong>Public-Key Crypto</strong></td>
+              <td>Yes</td>
+              <td>Trapdoor only ($k \to Q$)</td>
+              <td>Yes (Private key $k$)</td>
+              <td>Yes (ECDLP hardness)</td>
+              <td>Digital signatures & identity verification (secp256k1)</td>
+            </tr>
+            <tr>
+              <td><strong>Cryptographic Hash</strong></td>
+              <td>Yes</td>
+              <td>No</td>
+              <td>No</td>
+              <td>Yes ($2^{128}$ collision resistance)</td>
+              <td>Compresses 64-byte pubkey into 20-byte address (Keccak-256)</td>
+            </tr>
+            <tr>
+              <td><strong>Checksum</strong></td>
+              <td>Yes</td>
+              <td>Preserves data</td>
+              <td>No</td>
+              <td>No (Error detection only)</td>
+              <td>Catches typos & transpositions during copy-paste (EIP-55)</td>
+            </tr>
+            <tr>
+              <td><strong>Encoding</strong></td>
+              <td>Yes</td>
+              <td>Yes (100% bijective)</td>
+              <td>No</td>
+              <td>N/A</td>
+              <td>Formats raw bytes into ASCII hex string (<span class="mono">0x...</span>)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 3: EMPIRICAL STATISTICAL LABORATORY
+         ==================================================================== -->
+    <section class="workbench-card" aria-label="Statistical Laboratory">
+      <div class="workbench-title-group" style="margin-bottom: 16px;">
+        <h2>3. Empirical Statistical Laboratory</h2>
+        <p>Testing the Strict Avalanche Criterion (SAC), address space size, and collision probabilities under the Birthday Paradox.</p>
+      </div>
+
+      <!-- Lab Experiment 1: Strict Avalanche Criterion -->
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <span class="step-badge" style="background: #8b5cf6;">A</span>
+            <span class="step-name">Strict Avalanche Criterion (SAC) & Hamming Distance</span>
+          </div>
+          <span class="step-primitive-tag">Statistical Diffusion</span>
+        </div>
+        <p class="step-desc">
+          A fundamental requirement for any cryptographic hash or derivation function is the <strong>Strict Avalanche Criterion (SAC)</strong>: flipping a single bit in the input must cause each output bit to flip independently with probability $p = 0.5$. The number of flipped bits is the <strong>Hamming Distance</strong> $d_H(H_1, H_2) = \text{wt}(H_1 \oplus H_2)$, which follows a Binomial distribution $B(256, 0.5)$ with expected mean $\mu = 128$ and variance $\sigma^2 = 64$.
+        </p>
+
+        <div style="margin: 16px 0;">
+          <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: flex; justify-content: space-between;">
+            <span>Select Private Key Bit to Flip (0 to 255):</span>
+            <span class="mono" style="color: var(--accent-primary); font-weight: 700;">Bit #<span id="avalancheBitVal">0</span></span>
+          </label>
+          <div style="display: flex; gap: 12px; align-items: center; margin-top: 6px;">
+            <input type="range" id="avalancheBitSlider" min="0" max="255" value="0" style="flex: 1;">
+            <button class="btn-action" id="btnRandomBitFlip">Flip Random Bit</button>
+          </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="stat-badge-grid">
+          <div class="stat-badge">
+            <div class="stat-badge-title">Hamming Distance (dH)</div>
+            <div class="stat-badge-val" id="avalancheFlippedBits">128 / 256</div>
+          </div>
+          <div class="stat-badge">
+            <div class="stat-badge-title">Empirical Flip Ratio</div>
+            <div class="stat-badge-val" id="avalancheFlipRatio">50.00%</div>
+          </div>
+          <div class="stat-badge">
+            <div class="stat-badge-title">Delta from Ideal (50%)</div>
+            <div class="stat-badge-val" id="avalancheDiff50">±0.00%</div>
+          </div>
+          <div class="stat-badge">
+            <div class="stat-badge-title">Chi-Square (&chi;&sup2;)</div>
+            <div class="stat-badge-val" id="avalancheChiSq">0.000</div>
+          </div>
+          <div class="stat-badge">
+            <div class="stat-badge-title">p-value (df = 1)</div>
+            <div class="stat-badge-val" id="avalanchePVal">1.0000</div>
+          </div>
+        </div>
+
+        <!-- Bit Grid Matrix -->
+        <div class="bit-matrix-box">
+          <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-muted);">
+            <span>256-Bit XOR Difference Map ($H_{\text{original}} \oplus H_{\text{flipped}}$):</span>
+            <span><span style="color: #ef4444; font-weight: 700;">■</span> Flipped Bit (1) &nbsp; <span style="color: #10b981; font-weight: 700;">■</span> Unchanged Bit (0)</span>
+          </div>
+          <div class="bit-grid" id="avalancheBitGrid"></div>
+        </div>
+      </div>
+
+      <!-- Lab Experiment 2: Address Space & Birthday Collision Math -->
+      <div class="step-card" style="margin-top: 20px;">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <span class="step-badge" style="background: #8b5cf6;">B</span>
+            <span class="step-name">Address Space Size & Birthday Paradox Collision Bound</span>
+          </div>
+          <span class="step-primitive-tag">Combinatorial Probability</span>
+        </div>
+        <p class="step-desc">
+          An Ethereum address is 20 bytes (160 bits). The total address space contains $N = 2^{160} \approx 1.4615 \times 10^{48}$ possible addresses. By the <strong>Birthday Paradox</strong>, the probability of finding at least one collision among $n$ randomly generated addresses is approximated by:
+          <br>
+          <span class="mono" style="display: block; text-align: center; margin: 8px 0; font-size: 1.05rem; color: var(--accent-primary);">
+            P(collision) &approx; 1 &minus; exp(&minus; n&sup2; / (2 &times; 2&sup1;&sup6;&sup0;))
+          </span>
+          A 50% chance of a collision requires $n \approx \sqrt{2 \ln(2)} \cdot 2^{80} \approx 1.177 \times 2^{80} \approx 1.42 \times 10^{24}$ addresses.
+        </p>
+
+        <div style="margin: 16px 0;">
+          <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: flex; justify-content: space-between;">
+            <span>Simulate Number of Generated Addresses (log10 scale):</span>
+            <span class="mono" style="color: var(--accent-primary); font-weight: 700;">10<sup><span id="collisionExpVal">10.0</span></sup> addresses</span>
+          </label>
+          <input type="range" id="collisionExpSlider" min="2" max="28" step="0.5" value="10" style="width: 100%; margin-top: 8px;">
+        </div>
+
+        <div class="stat-badge-grid">
+          <div class="stat-badge">
+            <div class="stat-badge-title">Sample Size (n)</div>
+            <div class="stat-badge-val" id="collisionAddressCount">10,000,000,000</div>
+          </div>
+          <div class="stat-badge">
+            <div class="stat-badge-title">Collision Probability</div>
+            <div class="stat-badge-val" id="collisionProbDisplay" style="color: #10b981;">&lt; 10⁻³⁰</div>
+          </div>
+        </div>
+
+        <div class="data-output-box" style="margin-top: 10px;">
+          <div class="data-output-label">Physical Scale Context & Cryptographic Rationale:</div>
+          <p class="step-desc" id="collisionContextDesc" style="margin: 0; color: var(--text-main);">
+            All Ethereum addresses ever created across all networks combined are well below 10¹⁰. The collision risk is virtually zero.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 4: TEMPORAL & HISTORICAL CONTEXT
+         ==================================================================== -->
+    <section class="workbench-card" aria-label="Temporal Context">
+      <div class="workbench-title-group" style="margin-bottom: 16px;">
+        <h2>4. Temporal & Historical Context</h2>
+        <p>Placing public-key cryptography, hash standards, and hierarchical deterministic wallet technologies in chronological context.</p>
+      </div>
+
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-date">1977</div>
+          <h3 class="timeline-title">RSA (Rivest, Shamir, Adleman)</h3>
+          <p class="timeline-desc">First practical public-key cryptosystem based on the hardness of factoring large composite integers. Marked the dawn of modern asymmetric cryptography.</p>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-date">2001</div>
+          <h3 class="timeline-title">SHA-2 / SHA-512 (NIST FIPS 180-2)</h3>
+          <p class="timeline-desc">Standardized by NIST based on the Merkle-Damgård construction. While robust, Merkle-Damgård hashes are inherently susceptible to length-extension attacks without HMAC wrappers.</p>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-date">2012</div>
+          <h3 class="timeline-title">BIP-32: Hierarchical Deterministic Wallets</h3>
+          <p class="timeline-desc">Introduced by Pieter Wuille for Bitcoin. Allowed an entire tree of keypairs to be derived from a single master seed without needing continuous new backups.</p>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-date">2013</div>
+          <h3 class="timeline-title">BIP-39: Mnemonic Words for Deterministic Wallets</h3>
+          <p class="timeline-desc">Created by Marek Palatinus (Slush), Pavol Rusnak, and the Trezor team. Replaced raw hexadecimal seeds with human-friendly 12- or 24-word phrases and PBKDF2 key stretching.</p>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-date">2014</div>
+          <h3 class="timeline-title">BIP-44: Multi-Account Hierarchy for HD Wallets</h3>
+          <p class="timeline-desc">Standardized structured derivation paths (<span class="mono">m / purpose' / coin_type' / account' / change / index</span>) enabling a single seed to organize multiple currencies and accounts cleanly.</p>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-date">August 2015</div>
+          <h3 class="timeline-title">NIST Standardizes SHA-3 (FIPS 202)</h3>
+          <p class="timeline-desc">Following a multi-year competition won by the Keccak algorithm (designed by Bertoni, Daemen, Peeters, and Van Assche). Utilizes the revolutionary <strong>Sponge Construction</strong>.</p>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-date">2016</div>
+          <h3 class="timeline-title">EIP-55: Mixed-Case Checksum Addresses</h3>
+          <p class="timeline-desc">Proposed by Vitalik Buterin. Implemented backward-compatible error detection directly into Ethereum addresses by capitalizing hex characters based on their Keccak-256 hash.</p>
+        </div>
+      </div>
+
+      <!-- Deep Dive: Keccak-256 vs NIST SHA3-256 Duel -->
+      <div class="duel-card">
+        <h3 style="margin-top: 0; color: var(--text-main);">The Crucial Difference: Keccak-256 vs. NIST SHA3-256</h3>
+        <p class="step-desc">
+          When Ethereum was developed in 2014, the team chose the winning Keccak algorithm. However, NIST later finalized FIPS 202 in August 2015 and added <strong>domain separation padding</strong>:
+          <br>
+          &bull; <strong>Ethereum Keccak-256</strong> uses the original submission padding suffix <span class="mono">0x01</span> (<span class="mono">0b01</span>).<br>
+          &bull; <strong>NIST SHA3-256</strong> uses the standardized padding suffix <span class="mono">0x06</span> (<span class="mono">0b0110</span>).<br>
+          Because of this single padding difference, <span class="mono">Keccak-256(m) &ne; SHA3-256(m)</span> for any input!
+        </p>
+
+        <div class="input-field-group">
+          <label for="hashDuelInput">Enter any message to test both hash algorithms side-by-side in real-time:</label>
+          <input type="text" id="hashDuelInput" class="input-text" value="The quick brown fox jumps over the lazy dog" autocomplete="off">
+        </div>
+
+        <div class="duel-grid">
+          <div class="duel-column">
+            <h4>Ethereum Keccak-256 (Used by EVM)</h4>
+            <div class="data-output-val" id="duelEthKeccak" style="font-size: 0.82rem; word-break: break-all;">4d741b6f1eb29cb2a9b9911c82f56fa8d73b04959d3d9d222895df6c0b28aa15</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">
+              Padding byte: <span class="mono" id="duelEthPaddingByte" style="color: var(--accent-primary);">0x01 (binary 0b01)</span>
+            </div>
+          </div>
+
+          <div class="duel-column">
+            <h4>Standardized NIST SHA3-256 (FIPS 202)</h4>
+            <div class="data-output-val" id="duelNistSha3" style="font-size: 0.82rem; word-break: break-all;">69070dda01975c8c120c3aada1b282394e7f032fa9cf32f4cb2259a0897dfc04</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">
+              Padding byte: <span class="mono" id="duelNistPaddingByte" style="color: var(--accent-primary);">0x06 (binary 0b0110)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 5: ARCHITECTURAL RATIONALE: WHY MULTIPLE ALGORITHMS?
+         ==================================================================== -->
+    <section class="workbench-card" aria-label="System Architecture Rationale">
+      <div class="workbench-title-group" style="margin-bottom: 16px;">
+        <h2>5. Architectural Rationale: Why Not A Single Algorithm?</h2>
+        <p>Why Ethereum wallets combine multiple specialized cryptographic primitives rather than forcing one algorithm to do everything.</p>
+      </div>
+
+      <div class="taxonomy-grid">
+        <div class="taxonomy-card">
+          <h3>BIP-39 / BIP-32 / BIP-44</h3>
+          <span class="flow-node-sub" style="margin-bottom: 10px;">Key Management & Derivation</span>
+          <p>
+            <strong>Role:</strong> Human usability and infinite deterministic tree expansion.<br><br>
+            Raw 256-bit keys cannot be written down safely by users. BIP-39 converts entropy to memorable words with checksum protection. BIP-32 and BIP-44 allow a single root seed to derive millions of independent accounts and addresses. Without BIP-32, every new transaction or account would require generating and backing up a new private key.
+          </p>
+        </div>
+
+        <div class="taxonomy-card">
+          <h3>secp256k1 (ECDSA)</h3>
+          <span class="flow-node-sub" style="margin-bottom: 10px;">Asymmetric Relationship & Signatures</span>
+          <p>
+            <strong>Role:</strong> Identity, authorization, and non-repudiation.<br><br>
+            A hash function cannot sign a transaction. Public-key cryptography requires a mathematical trapdoor (the discrete log problem) where $Q = kG$ can be computed by anyone, but $k$ cannot be deduced. Transactions are signed using $k$, producing $(r, s, v)$ which anyone can verify using $Q$.
+          </p>
+        </div>
+
+        <div class="taxonomy-card">
+          <h3>Keccak-256</h3>
+          <span class="flow-node-sub" style="margin-bottom: 10px;">One-Way Compression & Privacy</span>
+          <p>
+            <strong>Role:</strong> State compression and pre-image obfuscation.<br><br>
+            An uncompressed public key is 65 bytes ($520$ bits). Storing 65 bytes for every account in Ethereum's world state Patricia Trie would bloat database storage prohibitively. Keccak compresses it to 20 bytes ($160$ bits), reducing storage costs while providing pre-image resistance.
+          </p>
+        </div>
+
+        <div class="taxonomy-card">
+          <h3>EIP-55</h3>
+          <span class="flow-node-sub" style="margin-bottom: 10px;">Error-Detecting Checksum</span>
+          <p>
+            <strong>Role:</strong> Human-factor typo protection without breaking APIs.<br><br>
+            Bitcoin uses Base58Check which appends 4 bytes of hash checksum. However, Ethereum already had thousands of smart contracts and dApps accepting 40-character hex strings (<span class="mono">0x...</span>). Vitalik Buterin designed EIP-55 so that hex parsers (which ignore case) still parse the address identically, while wallet UIs reject typos.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 6: SOFTWARE WALLETS IN PRACTICE
+         ==================================================================== -->
+    <section class="workbench-card" aria-label="Software Wallets in Practice">
+      <div class="workbench-title-group" style="margin-bottom: 16px;">
+        <h2>6. Software Wallets in Practice: MetaMask, Rabby, Exodus & Rainbow</h2>
+        <p>How modern Web3 wallet clients manage keys, storage encryption, derivation paths, and transaction signing.</p>
+      </div>
+
+      <div class="taxonomy-grid">
+        <div class="taxonomy-card">
+          <h3>MetaMask & Rabby (Browser Extensions)</h3>
+          <p>
+            MetaMask and Rabby store the BIP-39 mnemonic in the browser's encrypted storage (Vault) using <strong>AES-256-GCM</strong>, encrypted by a user password stretched with <strong>PBKDF2 (10,000 iterations)</strong>.
+            <br><br>
+            When users click "Add Account", MetaMask simply increments the address index $i$ in <span class="mono">m/44'/60'/0'/0/i</span>. The master seed never leaves local storage.
+          </p>
+        </div>
+
+        <div class="taxonomy-card">
+          <h3>Rainbow & Exodus (Mobile & Multi-Chain)</h3>
+          <p>
+            Rainbow and Exodus leverage native hardware security: <strong>Apple Secure Enclave</strong> on iOS and <strong>Android Keystore</strong> backed by biometric authentication (FaceID / Fingerprint).
+            <br><br>
+            Multi-currency wallets like Exodus change the BIP-44 coin type: <span class="mono">m/44'/60'/...</span> for Ethereum, <span class="mono">m/44'/0'/...</span> for Bitcoin, and <span class="mono">m/44'/501'/...</span> for Solana, all derived from a single backup phrase!
+          </p>
+        </div>
+
+        <div class="taxonomy-card">
+          <h3>Hardware Wallets (Ledger & Trezor)</h3>
+          <p>
+            Hardware wallets isolate the seed inside a certified Secure Element (Common Criteria EAL6+).
+            <br><br>
+            When interacting with dApps, the transaction payload is sent via USB/Bluetooth to the device, which displays the recipient and value on an isolated screen, signs the Keccak-256 hash using the internal private key, and returns only the $(r, s, v)$ signature.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div class="footer-text">
+        <span>Course of Statistics &bull; Academic Year 2026/2027</span><br>
+        <span>Author: <strong>Emanuele Orlandi</strong> (Matricola: <span class="mono">2021953</span>)</span>
+      </div>
+
+      <div class="footer-links">
+        <a href="https://github.com/LeleOrlandi02/StatisticsHomework26-27" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub Repository</a>
+        <a href="index.html" class="footer-link">Portfolio Index</a>
+        <a href="homework1.html" class="footer-link">Homework 1 (ECC)</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Standalone Scripts -->
+  <script src="homework2.js"></script>
+</body>
+</html>
