@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HMWK 1 — Toy ECC: from private key to public key</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#ffffff; --ink:#1c2230; --muted:#6b7385; --grid:#e3e6ec;
+    --accent:#3b6fd4; --ok:#1f9d6b; --warn:#d9822b; --bad:#d64545; --line:#d5d9e2;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#14171d; --card:#1c2029; --ink:#e7eaf0; --muted:#9aa3b5; --grid:#2a2f3b;
+           --accent:#7aa2f7; --ok:#4fd1a1; --warn:#f0a35a; --bad:#f07178; --line:#323847; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  main{max-width:1020px;margin:0 auto;padding:20px 16px 60px}
+  h1{font-size:1.5rem;margin:.2em 0}
+  h2{font-size:1.15rem;margin:0 0 .6em}
+  h3{font-size:.95rem;margin:1em 0 .3em}
+  .sub{color:var(--muted);margin:0 0 1em}
+  section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:16px 0}
+  .controls{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:end}
+  label{display:flex;flex-direction:column;font-size:.8rem;color:var(--muted);gap:3px}
+  select,input,button{font:inherit;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+  input[type=range]{padding:0}
+  button{cursor:pointer;background:var(--accent);color:#fff;border-color:transparent}
+  button.sec{background:var(--bg);color:var(--ink);border-color:var(--line)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .pub{margin:12px 0;padding:14px 16px;border-radius:10px;border:2px solid var(--ok);background:color-mix(in srgb,var(--ok) 8%,var(--card))}
+  .pub .big{font-size:1.5rem;font-weight:600}
+  .pub .lbl{font-size:.75rem;letter-spacing:.08em;color:var(--ok);font-weight:700}
+  table{border-collapse:collapse;width:100%;font-size:.85rem}
+  th,td{border-bottom:1px solid var(--line);padding:4px 8px;text-align:left}
+  th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--card)}
+  .scroll{max-height:280px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+  .note{color:var(--muted);font-size:.85rem}
+  .warn{color:var(--warn)}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+  .card{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .chart{width:100%;height:auto;display:block}
+  canvas{max-width:100%;height:auto;border:1px solid var(--line);border-radius:8px;display:block}
+  #status{min-height:3.2em;margin:8px 0;font-size:.9rem}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:.88rem}
+  .kv span:nth-child(odd){color:var(--muted)}
+  ul{margin:.3em 0 .3em 1.1em;padding:0}
+  li{margin:.25em 0}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Emanuele Orlandi, 2021953, Homework 1</h1>
+  <h2>private key → public key</h2>
+  <p class="sub">Curve <span class="mono">y² = x³ + 7 (mod p)</span>: a toy version of secp256k1 (the Ethereum curve).</p>
+</header>
+
+<section id="s1">
+  <h2>1. Parameters</h2>
+  <div class="controls">
+    <label>Prime field p
+      <select id="selP">
+        <option value="17">17 (toy curve from the exercise)</option>
+        <option value="1009">1009</option>
+        <option value="10007">10007</option>
+      </select>
+    </label>
+    <label>Base point G
+      <select id="selG"></select>
+    </label>
+    <label>Private key k
+      <input id="inK" type="number" min="1" step="1" value="6" style="width:110px">
+    </label>
+    <button id="btnCompute">Compute Q = kG</button>
+  </div>
+  <div id="curveInfo" class="kv" style="margin-top:12px"></div>
+</section>
+
+<section id="s2">
+  <h2>2. Result</h2>
+  <div id="pubkey"></div>
+  <h3>Repeated addition: G, 2G, 3G, …, kG</h3>
+  <div id="tableWrap"></div>
+  <h3>Fast method: double-and-add</h3>
+  <div id="daaWrap"></div>
+</section>
+
+<section id="s3">
+  <h2>3. Slow-motion visualization</h2>
+  <p class="note">Each step shows the chord rule: the line through P and Q (the tangent if P = Q) meets the curve at a third
+  point R; the result P + Q is the reflection of R across the x-axis (in modular arithmetic: y → p − y).
+  Available for p = 17, where all the points fit on a readable grid.</p>
+  <div class="controls">
+    <label>Algorithm
+      <select id="selMode">
+        <option value="rep">Repeated addition</option>
+        <option value="daa">Double-and-add</option>
+      </select>
+    </label>
+    <label>Speed
+      <input id="rngSpeed" type="range" min="1" max="10" value="2">
+    </label>
+    <button id="btnPlay">Start</button>
+    <button id="btnPause" class="sec">Pause</button>
+    <button id="btnStep" class="sec">Step</button>
+    <button id="btnReset" class="sec">Reset</button>
+  </div>
+  <div id="status" aria-live="polite"></div>
+  <canvas id="cv" width="560" height="560"></canvas>
+</section>
+
+<section id="s4">
+  <h2>4. Statistical exploration</h2>
+  <p class="note">Uses the curve and base point chosen above and computes Q<sub>k</sub> = kG for all keys k = 1 … n−1
+  (n = order of G). With p = 17 there are very few samples: also try p = 1009 and p = 10007.</p>
+  <div class="controls"><button id="btnStats">Run analysis</button></div>
+  <div id="statsOut"></div>
+</section>
+
+<section id="s5">
+  <h2>5. Discussion: one-way function vs hash function</h2>
+  <h3>Sensible properties for a one-way function (k ↦ kG)</h3>
+  <ul>
+    <li><b>Cost asymmetry.</b> Forward costs O(log k) operations (double-and-add); backward is the ECDLP. This is not a statistical property: none of the tests above measure the difficulty of inversion, and failing a uniformity test does not break security.</li>
+    <li><b>Injectivity.</b> For k in [1, n−1] every private key gives a different point (no collisions); for k ≥ n the trivial collisions k ≡ k mod n apply. The map does not compress, so "collision resistance" boils down to "key uniqueness".</li>
+    <li><b>Uniformity in the subgroup.</b> If k is uniform, Q is uniform among the points generated by G (the map is bijective): a well-generated private key does not produce a skewed public key.</li>
+    <li><b>Intended algebraic structure.</b> Q<sub>k1+k2</sub> = Q<sub>k1</sub> + Q<sub>k2</sub> and x(Q<sub>k</sub>) = x(Q<sub>n−k</sub>). They are needed for signatures, ECDH and for recovering the public key from a signature; we verified them in the tests.</li>
+  </ul>
+  <h3>Typical hash function properties (not required of kG)</h3>
+  <ul>
+    <li><b>Avalanche effect / SAC</b> (one input bit changes about half of the output) and independence of output bits: these are design goals of Keccak or SHA-2. For kG they are not needed and not guaranteed: k and k+1 give points related by +G.</li>
+    <li><b>Pseudorandom output on bit strings.</b> Point coordinates have constraints: x &lt; p (the high bits are unbalanced), only about half of the x values admit a point, y is determined by x up to sign (y² = x³ + 7). This is why the Ethereum address is a Keccak-256 hash of the public key and not the raw public key.</li>
+    <li><b>Collision, preimage and second-preimage resistance</b> on arbitrary-length inputs and compression to a fixed length: these are requirements of a hash, not of a fixed-length one-way function like kG.</li>
+    <li><b>Absence of homomorphisms.</b> A good hash has no algebraic relations between H(a), H(b) and H(a⊕b) or H(a+b). For kG, instead, they are present by construction.</li>
+  </ul>
+  <p class="note">Summary: statistics such as avalanche, correlations and bit uniformity speak to a hash; for kG what matters is the group structure, injectivity, uniformity in the subgroup and, above all, the hardness of the ECDLP, which cannot be measured this way.</p>
+</section>
+</main>
+
+<script>
+// ==== CORE ====
+const mod=(a,p)=>((a%p)+p)%p;
+function inv(a,p){
+  a=mod(a,p); let t=0,nt=1,r=p,nr=a;
+  while(nr!==0){ const q=Math.floor(r/nr); [t,nt]=[nt,t-q*nt]; [r,nr]=[nr,r-q*nr]; }
+  if(r!==1) throw new Error('not invertible');
+  return mod(t,p);
+}
+// P, Q: [x,y] or null (point at infinity)
+function addInfo(P,Q,C){
+  const p=C.p;
+  if(!P) return {R:Q,type:'O+Q'};
+  if(!Q) return {R:P,type:'P+O'};
+  if(P[0]===Q[0] && mod(P[1]+Q[1],p)===0) return {R:null,type:'P+(-P)=O'};
+  let lam,type;
+  if(P[0]===Q[0] && P[1]===Q[1]){ lam=mod((3*P[0]*P[0]+C.a)*inv(2*P[1],p),p); type='doubling'; }
+  else { lam=mod((Q[1]-P[1])*inv(Q[0]-P[0],p),p); type='addition'; }
+  const x3=mod(lam*lam-P[0]-Q[0],p);
+  const y3=mod(lam*(P[0]-x3)-P[1],p);
+  return {R:[x3,y3],lam,type};
+}
+function onCurve(P,C){
+  if(!P) return true;
+  return (P[1]*P[1])%C.p === ((((P[0]*P[0])%C.p)*P[0])+C.b)%C.p;
+}
+function makeCurve(p){
+  const C={p,a:0,b:7}; const sq=new Map();
+  for(let y=0;y<p;y++){ const s=(y*y)%p; if(!sq.has(s)) sq.set(s,[]); sq.get(s).push(y); }
+  C.points=[];
+  for(let x=0;x<p;x++){ const r=((((x*x)%p)*x)+C.b)%p; const ys=sq.get(r); if(ys) for(const y of ys) C.points.push([x,y]); }
+  return C;
+}
+function mulRepeated(k,G,C){ let R=null; for(let i=0;i<k;i++) R=addInfo(R,G,C).R; return R; }
+function mulDAA(k,G,C){ let R=null; for(const bit of k.toString(2)){ R=addInfo(R,R,C).R; if(bit==='1') R=addInfo(R,G,C).R; } return R; }
+function orderOf(P,C){
+  let R=P,n=1; const lim=2*C.p+10;
+  while(R){ R=addInfo(R,P,C).R; n++; if(n>lim) return -1; }
+  return n;
+}
+function seqPoints(G,C,n){
+  const X=[null],Y=[null]; let R=G;
+  for(let k=1;k<n;k++){ X.push(R[0]); Y.push(R[1]); R=addInfo(R,G,C).R; }
+  return {X,Y};
+}
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function fmix32(h){ h^=h>>>16; h=Math.imul(h,0x85ebca6b); h^=h>>>13; h=Math.imul(h,0xc2b2ae35); h^=h>>>16; return h>>>0; }
+const pop=(v)=>{ let c=0; v>>>=0; while(v){ c+=v&1; v>>>=1; } return c; };
+function pearson(a,b){
+  const n=a.length; if(n<3) return NaN;
+  let ma=0,mb=0; for(let i=0;i<n;i++){ ma+=a[i]; mb+=b[i]; } ma/=n; mb/=n;
+  let c=0,va=0,vb=0; for(let i=0;i<n;i++){ const da=a[i]-ma, db=b[i]-mb; c+=da*db; va+=da*da; vb+=db*db; }
+  return (va===0||vb===0)?NaN:c/Math.sqrt(va*vb);
+}
+function histogram(vals,p,B){ const h=new Array(B).fill(0); for(const v of vals) h[Math.min(B-1,Math.floor(v*B/p))]++; return h; }
+function chi2(h){ const N=h.reduce((a,b)=>a+b,0), e=N/h.length; return h.reduce((s,o)=>s+(o-e)*(o-e)/e,0); }
+function normCdf(z){
+  const t=1/(1+0.2316419*Math.abs(z)), d=0.3989423*Math.exp(-z*z/2);
+  const q=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));
+  return z>0?1-q:q;
+}
+function chi2p(c,df){ const z=(Math.cbrt(c/df)-(1-2/(9*df)))/Math.sqrt(2/(9*df)); return 1-normCdf(z); }
+
+function computeStats(C,G,n){
+  if(n<4) return {tooSmall:true,n};
+  const p=C.p, {X,Y}=seqPoints(G,C,n);
+  const xs=X.slice(1), ys=Y.slice(1), ks=xs.map((_,i)=>i+1), N=xs.length;
+  const B=p<=17?p:16;
+  const hx=histogram(xs,p,B), hy=histogram(ys,p,B);
+  const L=(p-1).toString(2).length;
+  const bitFreq=(arr)=>{ const f=[]; for(let b=0;b<L;b++){ let c=0; for(const v of arr) if((v>>b)&1) c++; f.push(c/arr.length); } return f; };
+  const distinctPts=new Set(xs.map((x,i)=>x*p+ys[i])).size;
+  const distinctX=new Set(xs).size;
+  let sym=true; for(let k=1;k<n;k++) if(X[k]!==X[n-k]){ sym=false; break; }
+  const curveX=new Set(C.points.map(q=>q[0])).size;
+  const rng=mulberry32(12345);
+  // avalanche
+  const Kbits=(n-1).toString(2).length, mask=(1<<L)-1;
+  let tr=0,sId=0,sMix=0,sX=0,sXY=0;
+  for(let t=0;t<6000 && tr<3000;t++){
+    const k=1+Math.floor(rng()*(n-1)), i=Math.floor(rng()*Kbits), k2=k^(1<<i);
+    if(k2<1||k2>=n) continue;
+    tr++;
+    sId+=pop(k^k2)/Kbits;
+    sMix+=pop((fmix32(k)&mask)^(fmix32(k2)&mask))/L;
+    sX+=pop(X[k]^X[k2])/L;
+    sXY+=(pop(X[k]^X[k2])+pop(Y[k]^Y[k2]))/(2*L);
+  }
+  const aval={trials:tr,identity:sId/tr,mixer:sMix/tr,eccX:sX/tr,eccXY:sXY/tr};
+  // homomorphism
+  let ok=0; const T=300;
+  for(let t=0;t<T;t++){
+    const k1=1+Math.floor(rng()*(n-1)), k2=1+Math.floor(rng()*(n-1)), s=(k1+k2)%n;
+    const lhs=addInfo([X[k1],Y[k1]],[X[k2],Y[k2]],C).R;
+    const rhs=s===0?null:[X[s],Y[s]];
+    if((lhs===null&&rhs===null)||(lhs&&rhs&&lhs[0]===rhs[0]&&lhs[1]===rhs[1])) ok++;
+  }
+  // brute force ECDLP
+  const ksec=1+Math.floor(rng()*(n-1)), tx=X[ksec], ty=Y[ksec];
+  const t0=Date.now(); let R=G,steps=1;
+  while(!(R[0]===tx&&R[1]===ty)){ R=addInfo(R,G,C).R; steps++; }
+  const brute={secret:ksec,found:steps,ms:Date.now()-t0,target:[tx,ty]};
+  const cx=chi2(hx), cy=chi2(hy);
+  return {
+    n,N,p,L,B,X,Y,xs,ys,hx,hy,cx,cy,
+    px:chi2p(cx,B-1), py:chi2p(cy,B-1), expected:N/B,
+    bitsX:bitFreq(xs), bitsY:bitFreq(ys),
+    distinctPts,distinctX,curveX,sym,
+    corr:{kx:pearson(ks,xs),ky:pearson(ks,ys),xy:pearson(xs,ys),lag:pearson(xs.slice(0,-1),xs.slice(1))},
+    aval,homo:{ok,T},brute
+  };
+}
+// ==== END CORE ====
+
+// ---------- UI ----------
+const $=(id)=>document.getElementById(id);
+const fmt=(P)=>P?`(${P[0]}, ${P[1]})`:'∞';
+const curves={}, orders=new Map();
+function getCurve(p){ return curves[p]||(curves[p]=makeCurve(p)); }
+function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+let cur={C:null,G:null,n:0,k:6};
+
+function populateG(){
+  const p=+$('selP').value, C=getCurve(p), sel=$('selG'); sel.innerHTML='';
+  let list;
+  if(p===17) list=C.points;
+  else { const step=Math.max(1,Math.floor(C.points.length/12)); list=[]; for(let i=0;i<C.points.length&&list.length<12;i+=step) list.push(C.points[i]); }
+  let best=null,bestN=-1;
+  for(const q of list){
+    const key=p+':'+q.join(','); if(!orders.has(key)) orders.set(key,orderOf(q,C));
+    const n=orders.get(key);
+    const o=document.createElement('option'); o.value=q.join(','); o.textContent=`(${q[0]}, ${q[1]}) — order ${n}`; sel.appendChild(o);
+    if(p===17 ? (q[0]===1&&q[1]===5) : n>bestN){ best=o; bestN=n; }
+  }
+  if(best) sel.value=best.value;
+}
+
+function stepsFor(mode,k,G,C){
+  const steps=[]; let R=G;
+  if(mode==='rep'){
+    for(let n=2;n<=k;n++){
+      const info=addInfo(R,G,C);
+      steps.push({P:R,Q:G,info,label:`${n}G = ${n-1}G + G`,resLabel:`${n}G`});
+      R=info.R;
+    }
+  } else {
+    const bits=k.toString(2); let r=1; R=null;
+    for(let i=0;i<bits.length;i++){
+      if(i===0){ R=G; continue; }
+      let info=addInfo(R,R,C); r*=2;
+      steps.push({P:R,Q:R,info,label:`double: ${r}G = 2·${r/2}G`,resLabel:`${r}G`}); R=info.R;
+      if(bits[i]==='1'){ info=addInfo(R,G,C); r+=1; steps.push({P:R,Q:G,info,label:`add: ${r}G = ${r-1}G + G`,resLabel:`${r}G`}); R=info.R; }
+    }
+  }
+  return steps;
+}
+
+function compute(){
+  const p=+$('selP').value, C=getCurve(p);
+  const [gx,gy]=$('selG').value.split(',').map(Number), G=[gx,gy];
+  let k=Math.floor(+$('inK').value); if(!(k>=1)) k=1; $('inK').value=k;
+  const n=orders.get(p+':'+G.join(','))||orderOf(G,C);
+  cur={C,G,n,k};
+  const N=C.points.length+1;
+  $('curveInfo').innerHTML=
+    `<span>Curve</span><span class="mono">y² = x³ + 7 (mod ${p}), a = 0, b = 7</span>`+
+    `<span>Base point</span><span class="mono">G = ${fmt(G)} — on curve: ${onCurve(G,C)?'yes':'NO'} (${G[1]}² ≡ ${(G[1]*G[1])%p}, x³+7 ≡ ${((G[0]**3)+7)%p} mod ${p})</span>`+
+    `<span>Curve points</span><span>${N} (including ∞)</span>`+
+    `<span>Order of G</span><span>n = ${n} (cofactor ${N/n})</span>`;
+  const Q=mulDAA(k,G,C);
+  let check='';
+  if(k<=200000){ const Q2=mulRepeated(k,G,C); check=(fmt(Q)===fmt(Q2))?'<span class="note">Repeated addition and double-and-add give the same point ✓</span>':'<span class="warn">Mismatch between the two methods!</span>'; }
+  $('pubkey').innerHTML=
+    `<div class="pub"><div class="lbl">TOY PUBLIC KEY</div>`+
+    `<div class="mono big">Q = ${k}·G = ${fmt(Q)}</div>`+
+    `<div class="note">private key k = ${k}${k>=n?` — warning: k ≥ n = ${n}, so it is equivalent to k mod n = ${k%n}`:''}</div>${check}</div>`;
+  // table
+  const maxRows=64; let rows='',R=null,prev=null;
+  for(let i=1;i<=Math.min(k,maxRows);i++){
+    const info=addInfo(prev,G,C); const R2=info.R;
+    const op=i===1?'—':(info.type==='doubling'?'doubling':(info.type==='P+(-P)=O'?'P + (−P) = ∞':`${i-1}G + G`));
+    rows+=`<tr><td>${i}</td><td class="mono">${fmt(R2)}</td><td>${op}</td><td class="mono">${info.lam!==undefined?'λ = '+info.lam:''}</td></tr>`;
+    prev=R2;
+    if(i===1) prev=G;
+  }
+  if(k>maxRows) rows+=`<tr><td>…</td><td colspan="3" class="note">table truncated to ${maxRows} rows</td></tr><tr><td>${k}</td><td class="mono">${fmt(Q)}</td><td colspan="2">via double-and-add</td></tr>`;
+  $('tableWrap').innerHTML=`<div class="scroll"><table><thead><tr><th>n</th><th>nG</th><th>operation</th><th>slope</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  // daa
+  const bits=k.toString(2); let r=null,drows='';
+  for(let i=0;i<bits.length;i++){
+    const before=r; r=addInfo(r,r,C).R; const dbl=r; let add='—';
+    if(bits[i]==='1'){ r=addInfo(r,G,C).R; add=fmt(r); }
+    drows+=`<tr><td>${i+1}</td><td class="mono">${bits[i]}</td><td class="mono">${fmt(before)} → ${fmt(dbl)}</td><td class="mono">${add}</td></tr>`;
+  }
+  $('daaWrap').innerHTML=`<p class="note">k = ${k} in binary = <span class="mono">${bits}</span>: ${bits.length} doublings and ${[...bits].filter(b=>b==='1').length} additions instead of ${k-1} additions.</p>`+
+    `<div class="scroll"><table><thead><tr><th>#</th><th>bit</th><th>R ← 2R</th><th>R ← R + G</th></tr></thead><tbody>${drows}</tbody></table></div>`;
+  resetAnim();
+}
+
+// ---------- animation ----------
+const cv=$('cv'), ctx=cv.getContext('2d');
+const anim={token:0,paused:false,stepReq:false,running:false};
+const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
+function layout(C){ const W=cv.width,H=cv.height,m=34,cell=(W-2*m)/C.p; return {W,H,m,cell,px:x=>m+x*cell+cell/2,py:y=>H-m-(y*cell+cell/2)}; }
+function drawScene(sc){
+  const C=cur.C, L=layout(C), c={ink:css('--ink'),grid:css('--grid'),pt:css('--muted'),acc:css('--accent'),warn:css('--warn'),ok:css('--ok'),bad:css('--bad')};
+  ctx.fillStyle=css('--card'); ctx.fillRect(0,0,L.W,L.H);
+  ctx.strokeStyle=c.grid; ctx.lineWidth=1; ctx.fillStyle=c.pt; ctx.font='11px system-ui'; ctx.textAlign='center';
+  for(let i=0;i<C.p;i++){
+    ctx.beginPath(); ctx.moveTo(L.px(i),L.py(0)+L.cell/2); ctx.lineTo(L.px(i),L.py(C.p-1)-L.cell/2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(L.px(0)-L.cell/2,L.py(i)); ctx.lineTo(L.px(C.p-1)+L.cell/2,L.py(i)); ctx.stroke();
+    ctx.fillText(i,L.px(i),L.H-L.m+16); ctx.fillText(i,L.m-14,L.py(i)+4);
+  }
+  ctx.fillText('x',L.W/2,L.H-4); ctx.fillText('y',8,L.H/2);
+  ctx.strokeStyle=c.pt; ctx.lineWidth=1.2;
+  for(const q of C.points){ ctx.beginPath(); ctx.arc(L.px(q[0]),L.py(q[1]),5,0,7); ctx.stroke(); }
+  if(sc.line){ ctx.fillStyle=c.warn; for(const q of sc.line){ ctx.beginPath(); ctx.arc(L.px(q[0]),L.py(q[1]),3,0,7); ctx.fill(); } }
+  for(const t of sc.trail){
+    ctx.fillStyle=c.acc; ctx.beginPath(); ctx.arc(L.px(t.pt[0]),L.py(t.pt[1]),7,0,7); ctx.fill();
+    ctx.fillStyle=c.ink; ctx.font='bold 11px system-ui'; ctx.fillText(t.label,L.px(t.pt[0]),L.py(t.pt[1])-11);
+  }
+  const ring=(pt,col)=>{ ctx.strokeStyle=col; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(L.px(pt[0]),L.py(pt[1]),12,0,7); ctx.stroke(); };
+  if(sc.P) ring(sc.P,c.acc);
+  if(sc.Q) ring(sc.Q,c.ok);
+  if(sc.R){
+    const x=L.px(sc.R[0]), y=L.py(sc.R[1]); ctx.strokeStyle=c.bad; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(x-8,y-8); ctx.lineTo(x+8,y+8); ctx.moveTo(x+8,y-8); ctx.lineTo(x-8,y+8); ctx.stroke();
+    if(sc.res){ ctx.setLineDash([5,4]); ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(L.px(sc.res[0]),L.py(sc.res[1])); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle=c.ok; ctx.beginPath(); ctx.arc(L.px(sc.res[0]),L.py(sc.res[1]),9,0,7); ctx.fill(); }
+  }
+}
+function msg(t){ $('status').innerHTML=t; }
+function resetAnim(){
+  anim.token++; anim.paused=false; anim.running=false;
+  const ok=cur.C && cur.C.p<=64;
+  ['btnPlay','btnPause','btnStep'].forEach(id=>$(id).disabled=!ok);
+  if(!ok){ ctx.clearRect(0,0,cv.width,cv.height); cv.style.display='none'; msg('Animation is only available for p = 17: choose that curve in the parameters.'); return; }
+  cv.style.display='block';
+  drawScene({trail:[{pt:cur.G,label:'G'}]});
+  msg(`Ready: G = ${fmt(cur.G)}, k = ${cur.k}. Press Start (or Pause and then Step to go one step at a time).`);
+}
+async function tick(my){
+  if(anim.token!==my) throw 'cancel';
+  if(anim.paused){ while(anim.paused&&!anim.stepReq&&anim.token===my) await sleep(60); anim.stepReq=false; }
+  else await sleep(1800/(+$('rngSpeed').value));
+  if(anim.token!==my) throw 'cancel';
+}
+async function runAnim(){
+  if(!cur.C||cur.C.p>64) return;
+  const my=++anim.token; anim.running=true; if(!anim.paused) anim.paused=false;
+  const C=cur.C,G=cur.G,mode=$('selMode').value,trail=[{pt:G,label:'G'}];
+  const steps=stepsFor(mode,cur.k,G,C);
+  try{
+    drawScene({trail}); msg(`Starting from G = ${fmt(G)}.`); await tick(my);
+    for(const s of steps){
+      const sc={trail,P:s.P,Q:s.Q};
+      msg(`<b>${s.label}</b>: P = ${fmt(s.P)}, Q = ${fmt(s.Q)}.`); drawScene(sc); await tick(my);
+      if(s.info.lam===undefined){
+        if(s.info.R){ sc.res=s.info.R; sc.R=s.info.R; msg(`One of the two is ∞: the result is the other one, ${fmt(s.info.R)}.`); drawScene(sc); await tick(my); trail.push({pt:s.info.R,label:s.resLabel}); }
+        else { msg('Result: ∞ (point at infinity).'); await tick(my); }
+        continue;
+      }
+      const p=C.p; sc.line=[];
+      if(s.P[0]===s.Q[0]) for(let y=0;y<p;y++) sc.line.push([s.P[0],y]);
+      else for(let x=0;x<p;x++) sc.line.push([x,mod(s.info.lam*(x-s.P[0])+s.P[1],p)]);
+      msg(`${s.info.type==='doubling'?'Tangent at P':'Line through P and Q'}: slope λ = ${s.info.lam} (mod ${p}). The orange dots are the line.`); drawScene(sc); await tick(my);
+      if(s.info.R===null){ msg('P and Q are opposites: the line is vertical and has no third point, so P + Q = ∞.'); await tick(my); continue; }
+      sc.R=[s.info.R[0],mod(-s.info.R[1],p)];
+      msg(`Third intersection with the curve: R = ${fmt(sc.R)} (red cross).`); drawScene(sc); await tick(my);
+      sc.res=s.info.R;
+      msg(`Reflection of R across the x-axis (y → ${p} − y): <b>${s.resLabel} = ${fmt(s.info.R)}</b>.`); drawScene(sc); await tick(my);
+      trail.push({pt:s.info.R,label:s.resLabel});
+    }
+    drawScene({trail});
+    msg(`<b>TOY PUBLIC KEY: Q = ${cur.k}·G = ${fmt(mulDAA(cur.k,G,C))}</b>`);
+    anim.running=false;
+  }catch(e){ if(e!=='cancel') throw e; }
+}
+$('btnPlay').onclick=()=>{ anim.paused=false; runAnim(); };
+$('btnPause').onclick=()=>{ anim.paused=!anim.paused; $('btnPause').textContent=anim.paused?'Resume':'Pause'; };
+$('btnStep').onclick=()=>{ if(!anim.running){ anim.paused=true; $('btnPause').textContent='Resume'; runAnim(); } else { anim.paused=true; $('btnPause').textContent='Resume'; anim.stepReq=true; } };
+$('btnReset').onclick=()=>{ $('btnPause').textContent='Pause'; resetAnim(); };
+$('selMode').onchange=()=>{ $('btnPause').textContent='Pause'; resetAnim(); };
+
+// ---------- statistics ----------
+function bars(vals,{w=300,h=100,expected=null,l0='',l1='',title=''}={}){
+  const m=Math.max(...vals,expected||0)||1, bw=w/vals.length;
+  let s=`<svg viewBox="0 0 ${w} ${h+16}" class="chart" role="img" aria-label="${title}">`;
+  vals.forEach((v,i)=>{ const bh=v/m*h; s+=`<rect x="${(i*bw+1).toFixed(1)}" y="${(h-bh).toFixed(1)}" width="${Math.max(1,bw-2).toFixed(1)}" height="${bh.toFixed(1)}" fill="var(--accent)"/>`; });
+  if(expected!=null){ const y=h-expected/m*h; s+=`<line x1="0" x2="${w}" y1="${y}" y2="${y}" stroke="var(--warn)" stroke-dasharray="4 3"/>`; }
+  s+=`<text x="0" y="${h+12}" font-size="10" fill="var(--muted)">${l0}</text><text x="${w}" y="${h+12}" font-size="10" fill="var(--muted)" text-anchor="end">${l1}</text></svg>`;
+  return s;
+}
+const f3=(v)=>Number.isNaN(v)?'n/a':v.toFixed(3);
+function runStats(){
+  const {C,G,n}=cur; if(!C){ compute(); }
+  const S=computeStats(cur.C,cur.G,cur.n), out=$('statsOut');
+  if(S.tooSmall){ out.innerHTML=`<p class="warn">G has order ${S.n}: too small for statistics. Choose another base point.</p>`; return; }
+  const small=S.expected<5;
+  const pv=(p)=>p<0.001?'&lt; 0.001':p.toFixed(3);
+  let h='';
+  h+=`<div class="card"><div class="kv">`+
+    `<span>Curve / G</span><span class="mono">p = ${S.p}, G = ${fmt(cur.G)}</span>`+
+    `<span>Keys k analyzed</span><span>${S.N} (k = 1 … n−1, n = ${S.n})</span>`+
+    `<span>Distinct points Q<sub>k</sub></span><span>${S.distinctPts} of ${S.N}: ${S.distinctPts===S.N?'no collisions for k < n':'collisions!'}</span>`+
+    `<span>Distinct x values</span><span>${S.distinctX} (the curve has ${S.curveX} admissible x values out of ${S.p})</span>`+
+    `<span>Symmetry x(Q<sub>k</sub>) = x(Q<sub>n−k</sub>)</span><span>${S.sym?'verified for every k ✓ (Q<sub>n−k</sub> = −Q<sub>k</sub>)':'not verified'}</span>`+
+    `<span>Homomorphism Q<sub>k1+k2</sub> = Q<sub>k1</sub> + Q<sub>k2</sub></span><span>${S.homo.ok}/${S.homo.T} random pairs ✓</span>`+
+    `</div></div>`;
+  h+=`<div class="grid2" style="margin-top:14px">`;
+  h+=`<div class="card"><h3>Distribution of x (${S.B} ${S.p<=17?'values':'bins'})</h3>${bars(S.hx,{expected:S.expected,l0:'0',l1:String(S.p-1),title:'histogram of x'})}`+
+     `<div class="note">χ² = ${S.cx.toFixed(1)} (df ${S.B-1}), p ≈ ${pv(S.px)}${small?' <span class="warn">— expected &lt; 5 per bin: test not reliable</span>':''}. Dashed line = uniform frequency.</div></div>`;
+  h+=`<div class="card"><h3>Distribution of y</h3>${bars(S.hy,{expected:S.expected,l0:'0',l1:String(S.p-1),title:'histogram of y'})}`+
+     `<div class="note">χ² = ${S.cy.toFixed(1)}, p ≈ ${pv(S.py)}. Q and −Q have the same x and opposite y (y ↔ p−y), so the distribution of y is symmetric around p/2.</div></div>`;
+  h+=`<div class="card"><h3>Bits of x: fraction of 1s (bit 0 = least significant)</h3>${bars(S.bitsX,{h:90,expected:0.5,l0:'bit 0',l1:'bit '+(S.L-1),title:'bit frequency of x'}).replace(/<svg /,'<svg style="max-width:100%" ')}`+
+     `<div class="note">Ideal is 0.5. The high bits are unbalanced because x &lt; p and p is not a power of 2.</div></div>`;
+  h+=`<div class="card"><h3>Bits of y: fraction of 1s</h3>${bars(S.bitsY,{h:90,expected:0.5,l0:'bit 0',l1:'bit '+(S.L-1),title:'bit frequency of y'})}`+
+     `<div class="note">Values: ${S.bitsY.map(v=>v.toFixed(2)).join(', ')}</div></div>`;
+  h+=`<div class="card"><h3>Input → output correlation (Pearson)</h3><div class="kv">`+
+     `<span>r(k, x)</span><span class="mono">${f3(S.corr.kx)}</span><span>r(k, y)</span><span class="mono">${f3(S.corr.ky)}</span>`+
+     `<span>r(x, y)</span><span class="mono">${f3(S.corr.xy)}</span><span>r(x<sub>k</sub>, x<sub>k+1</sub>)</span><span class="mono">${f3(S.corr.lag)}</span></div>`+
+     `<div class="note">Values close to 0: no linear dependence. Note: r(k, x) is exactly 0 because of the symmetry x(Q<sub>k</sub>) = x(Q<sub>n−k</sub>), not because of "randomness"; and the absence of correlation does not imply the absence of structure: Q<sub>k+1</sub> = Q<sub>k</sub> + G.</div></div>`;
+  h+=`<div class="card"><h3>Avalanche effect (flipping 1 bit of k)</h3><table><thead><tr><th>map</th><th>output bits changed</th></tr></thead><tbody>`+
+     `<tr><td>identity k ↦ k</td><td class="mono">${(S.aval.identity*100).toFixed(1)}%</td></tr>`+
+     `<tr><td>non-cryptographic mixer (reference)</td><td class="mono">${(S.aval.mixer*100).toFixed(1)}%</td></tr>`+
+     `<tr><td>x of kG</td><td class="mono">${(S.aval.eccX*100).toFixed(1)}%</td></tr>`+
+     `<tr><td>(x, y) of kG</td><td class="mono">${(S.aval.eccXY*100).toFixed(1)}%</td></tr></tbody></table>`+
+     `<div class="note">${S.aval.trials} trials. A good hash tends to 50%. With such a small p the difference between ECC and the reference is not very informative; what matters is that for kG the avalanche effect is not a requirement.</div></div>`;
+  h+=`<div class="card"><h3>Points (x, y) of Q<sub>k</sub></h3><canvas id="cvScatter" width="340" height="340"></canvas><div class="note">Color = k. The "mirror lattice" structure (symmetry y ↔ p−y) is visible.</div></div>`;
+  h+=`<div class="card"><h3>Brute-force inversion (ECDLP)</h3><div class="kv">`+
+     `<span>Random secret</span><span class="mono">k = ${S.brute.secret}, Q = ${fmt(S.brute.target)}</span>`+
+     `<span>Found after</span><span class="mono">${S.brute.found} steps (${S.brute.ms} ms)</span></div>`+
+     `<div class="note">With n ≈ ${S.n} it is instant. For secp256k1, n ≈ 2<sup>256</sup>: the best generic attacks (Pollard rho) require about 2<sup>128</sup> operations.</div></div>`;
+  h+=`</div>`;
+  out.innerHTML=h;
+  const sc=$('cvScatter').getContext('2d'), W=340, r=S.p<=17?6:(S.p<=1009?2.5:1.6);
+  sc.fillStyle=css('--card'); sc.fillRect(0,0,W,W);
+  sc.strokeStyle=css('--grid'); sc.strokeRect(.5,.5,W-1,W-1);
+  for(let i=0;i<S.xs.length;i++){
+    sc.fillStyle=`hsl(${Math.round(300*i/S.xs.length)},70%,55%)`;
+    sc.beginPath(); sc.arc(8+(S.xs[i]/S.p)*(W-16), W-8-(S.ys[i]/S.p)*(W-16), r, 0, 7); sc.fill();
+  }
+}
+
+$('selP').onchange=()=>{ populateG(); compute(); $('statsOut').innerHTML=''; };
+$('selG').onchange=()=>{ compute(); $('statsOut').innerHTML=''; };
+$('btnCompute').onclick=compute;
+$('inK').addEventListener('keydown',e=>{ if(e.key==='Enter') compute(); });
+$('btnStats').onclick=runStats;
+populateG(); compute();
+</script>
+</body>
+</html>
