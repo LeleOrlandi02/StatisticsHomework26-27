@@ -1,372 +1,1057 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>HMWK 1 — Toy ECC: from private key to public key</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Homework 1: Toy ECC - From Private Key to Public Key. Scalar multiplication Q = kG over y² = x³ + 7 (mod p), repeated addition vs double-and-add, slow-motion chord-and-tangent animation, and statistical tests.">
+  <meta name="author" content="Emanuele Orlandi">
+  <title>HMWK 1 — Toy ECC: Private Key to Public Key | Statistics Portfolio 2026/2027</title>
+
+  <!-- Global Design System -->
+  <link rel="stylesheet" href="style.css">
 
   <style>
+    /* Dedicated Custom Styles for Homework 1 - Harmonized with Homework 2 Design System */
     :root {
-      --bg: #f6f7f9;
-      --card: #ffffff;
-      --ink: #1c2230;
-      --muted: #6b7385;
-      --grid: #e3e6ec;
-      --accent: #3b6fd4;
-      --ok: #1f9d6b;
-      --warn: #d9822b;
-      --bad: #d64545;
-      --line: #d5d9e2;
+      --bg: var(--bg-primary);
+      --card: var(--bg-card);
+      --ink: var(--text-main);
+      --muted: var(--text-muted);
+      --grid: var(--border-subtle);
+      --accent: var(--accent-primary);
+      --ok: var(--status-completed-text);
+      --warn: var(--status-pending-text);
+      --bad: #ef4444;
+      --line: var(--border-subtle);
     }
 
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #14171d;
-        --card: #1c2029;
-        --ink: #e7eaf0;
-        --muted: #9aa3b5;
-        --grid: #2a2f3b;
-        --accent: #7aa2f7;
-        --ok: #4fd1a1;
-        --warn: #f0a35a;
-        --bad: #f07178;
-        --line: #323847;
-      }
+    [data-theme="dark"] {
+      --bg: var(--bg-primary);
+      --card: var(--bg-card);
+      --ink: var(--text-main);
+      --muted: var(--text-muted);
+      --grid: var(--border-subtle);
+      --accent: var(--accent-primary);
+      --ok: var(--status-completed-text);
+      --warn: var(--status-pending-text);
+      --bad: #f87171;
+      --line: var(--border-subtle);
     }
 
-    * {
-      box-sizing: border-box
-    }
-
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--ink);
-      font: 15px/1.55 system-ui, -apple-system, Segoe UI, Roboto, sans-serif
-    }
-
-    main {
-      max-width: 1020px;
+    .hw1-container {
+      max-width: 1140px;
       margin: 0 auto;
-      padding: 20px 16px 60px
+      padding: 24px 20px 80px;
     }
 
-    h1 {
-      font-size: 1.5rem;
-      margin: .2em 0
+    .pipeline-hero {
+      margin-bottom: 2rem;
     }
 
-    h2 {
-      font-size: 1.15rem;
-      margin: 0 0 .6em
+    /* Pipeline Flow Banner */
+    .pipeline-flow-banner {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin: 24px 0;
+      box-shadow: var(--shadow-md);
+      overflow-x: auto;
     }
 
-    h3 {
-      font-size: .95rem;
-      margin: 1em 0 .3em
-    }
-
-    .sub {
-      color: var(--muted);
-      margin: 0 0 1em
-    }
-
-    section {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 16px 18px;
-      margin: 16px 0
-    }
-
-    .controls {
+    .flow-steps-diagram {
       display: flex;
-      flex-wrap: wrap;
-      gap: 12px 18px;
-      align-items: end
+      align-items: center;
+      justify-content: space-between;
+      min-width: 820px;
+      gap: 12px;
     }
 
-    label {
+    .flow-node {
       display: flex;
       flex-direction: column;
-      font-size: .8rem;
-      color: var(--muted);
-      gap: 3px
+      align-items: center;
+      text-align: center;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      min-width: 120px;
+      transition: var(--transition-normal);
     }
 
-    select,
-    input,
-    button {
-      font: inherit;
-      padding: 6px 10px;
-      border-radius: 8px;
-      border: 1px solid var(--line);
-      background: var(--bg);
-      color: var(--ink)
+    .flow-node.active {
+      border-color: var(--accent-primary);
+      background: color-mix(in srgb, var(--accent-primary) 8%, var(--bg-card));
+      box-shadow: 0 0 16px var(--accent-glow);
     }
 
-    input[type=range] {
-      padding: 0
+    .flow-node-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-main);
     }
 
-    button {
-      cursor: pointer;
-      background: var(--accent);
-      color: #fff;
-      border-color: transparent
+    .flow-node-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 2px;
     }
 
-    button.sec {
-      background: var(--bg);
-      color: var(--ink);
-      border-color: var(--line)
+    .flow-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: var(--accent-primary);
+      font-weight: 700;
+      font-size: 0.75rem;
+      white-space: nowrap;
     }
 
-    button:disabled {
-      opacity: .45;
-      cursor: not-allowed
+    .flow-arrow-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      background: var(--tag-bg);
+      border: 1px solid var(--tag-border);
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-bottom: 2px;
     }
 
-    code,
-    .mono {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace
+    /* Workbench Card */
+    .workbench-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-md);
     }
 
-    .pub {
-      margin: 12px 0;
-      padding: 14px 16px;
-      border-radius: 10px;
-      border: 2px solid var(--ok);
-      background: color-mix(in srgb, var(--ok) 8%, var(--card))
+    .workbench-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-subtle);
     }
 
-    .pub .big {
-      font-size: 1.5rem;
-      font-weight: 600
+    .workbench-title-group h2 {
+      margin: 0;
+      font-size: 1.35rem;
+      color: var(--text-main);
     }
 
-    .pub .lbl {
-      font-size: .75rem;
-      letter-spacing: .08em;
-      color: var(--ok);
-      font-weight: 700
+    .workbench-title-group p {
+      margin: 4px 0 0;
+      font-size: 0.88rem;
+      color: var(--text-muted);
     }
 
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      font-size: .85rem
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
-    th,
-    td {
-      border-bottom: 1px solid var(--line);
-      padding: 4px 8px;
-      text-align: left
-    }
-
-    th {
-      color: var(--muted);
+    .btn-action {
+      font-family: inherit;
+      font-size: 0.82rem;
       font-weight: 600;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-strong);
+      background: var(--bg-secondary);
+      color: var(--text-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition-fast);
+    }
+
+    .btn-action:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+    }
+
+    .btn-action.primary {
+      background: var(--accent-primary);
+      color: #ffffff;
+      border-color: transparent;
+    }
+
+    .btn-action.primary:hover {
+      background: var(--accent-secondary);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .btn-action:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      border-color: var(--border-subtle);
+    }
+
+    /* Controls Grid */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .input-field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-field-group label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .input-text, .input-select {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-secondary);
+      color: var(--text-main);
+      width: 100%;
+      box-sizing: border-box;
+      transition: border-color var(--transition-fast);
+    }
+
+    .input-text:focus, .input-select:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+
+    /* Key-Value Info Display */
+    .kv-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 6px 14px;
+      font-size: 0.88rem;
+      align-items: baseline;
+    }
+
+    .kv span:nth-child(odd) {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .kv span:nth-child(even) {
+      color: var(--text-main);
+    }
+
+    /* Step Cards */
+    .step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      margin-bottom: 18px;
+      position: relative;
+      transition: border-color var(--transition-fast);
+    }
+
+    .step-card:hover {
+      border-color: var(--border-accent);
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .step-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent-primary);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .step-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .step-primitive-tag {
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      background: var(--tag-bg);
+      color: var(--tag-text);
+      border: 1px solid var(--tag-border);
+      font-weight: 600;
+    }
+
+    .step-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    /* Public Key Showcase Banner */
+    .address-showcase {
+      margin: 16px 0 20px;
+      padding: 16px 20px;
+      border-radius: var(--radius-md);
+      border: 2px solid #10b981;
+      background: color-mix(in srgb, #10b981 8%, var(--bg-card));
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .address-showcase-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #10b981;
+    }
+
+    .address-showcase-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main);
+      word-break: break-all;
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      margin: 14px 0;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .styled-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+      background: var(--bg-card);
+    }
+
+    .styled-table th, .styled-table td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .styled-table th {
+      background: var(--bg-secondary);
+      font-weight: 600;
+      color: var(--text-muted);
       position: sticky;
       top: 0;
-      background: var(--card)
+      z-index: 1;
+    }
+
+    .styled-table tr:hover {
+      background: color-mix(in srgb, var(--accent-primary) 3%, var(--bg-card));
     }
 
     .scroll {
       max-height: 280px;
-      overflow: auto;
-      border: 1px solid var(--line);
-      border-radius: 8px
+      overflow-y: auto;
     }
 
-    .note {
-      color: var(--muted);
-      font-size: .85rem
-    }
-
-    .warn {
-      color: var(--warn)
-    }
-
-    .grid2 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 14px
-    }
-
-    .card {
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 10px 12px
-    }
-
-    .chart {
-      width: 100%;
-      height: auto;
-      display: block
+    /* Animation Canvas Wrapper */
+    .canvas-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 16px;
     }
 
     canvas {
       max-width: 100%;
       height: auto;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      display: block
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      background: var(--bg-card);
+      display: block;
     }
 
-    #status {
-      min-height: 3.2em;
-      margin: 8px 0;
-      font-size: .9rem
+    .status-msg-box {
+      font-size: 0.88rem;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      width: 100%;
+      margin: 12px 0;
+      min-height: 3em;
+      display: flex;
+      align-items: center;
+      line-height: 1.45;
     }
 
-    .kv {
+    /* Statistical Grid & Cards */
+    .grid2 {
       display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 2px 12px;
-      font-size: .88rem
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      margin-top: 14px;
     }
 
-    .kv span:nth-child(odd) {
-      color: var(--muted)
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
     }
 
-    ul {
-      margin: .3em 0 .3em 1.1em;
-      padding: 0
+    .stat-card h3 {
+      font-size: 0.95rem;
+      margin: 0 0 10px;
+      color: var(--text-main);
+      font-weight: 700;
     }
 
-    li {
-      margin: .25em 0
+    .chart {
+      width: 100%;
+      height: auto;
+      display: block;
+      margin: 8px 0;
+    }
+
+    /* Taxonomy & Discussion Cards */
+    .taxonomy-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 18px;
+      margin: 20px 0;
+    }
+
+    .taxonomy-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .taxonomy-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .taxonomy-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--accent-glow);
+      color: var(--accent-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .taxonomy-card h3 {
+      margin: 0;
+      font-size: 1.05rem;
+      color: var(--text-main);
+    }
+
+    .taxonomy-card p, .taxonomy-card ul {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .taxonomy-card ul {
+      margin: 8px 0 12px 18px;
+      padding: 0;
+    }
+
+    .taxonomy-card li {
+      margin: 6px 0;
+    }
+
+    .taxonomy-meta-list {
+      list-style: none;
+      padding: 0;
+      margin: 12px 0 0;
+      font-size: 0.82rem;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .taxonomy-meta-list li {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 4px;
+      margin: 0;
+    }
+
+    .taxonomy-meta-list span:first-child {
+      color: var(--text-muted);
+    }
+
+    .taxonomy-meta-list span:last-child {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .nav-back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-primary);
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      transition: var(--transition-fast);
+    }
+
+    .nav-back-btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-primary);
+    }
+
+    .note {
+      color: var(--text-muted);
+      font-size: 0.84rem;
+      line-height: 1.5;
+    }
+
+    .warn {
+      color: var(--status-pending-text);
+      font-weight: 600;
     }
   </style>
-
 </head>
-
 <body>
-  <main>
-    <nav style="margin-bottom: 1.25rem; display: flex; gap: 10px; flex-wrap: wrap;">
-      <a href="index.html" style="display:inline-flex;align-items:center;gap:6px;font-size:0.85rem;font-weight:600;color:var(--accent);text-decoration:none;padding:6px 14px;border-radius:8px;background:var(--card);border:1px solid var(--line);box-shadow:0 1px 2px rgba(0,0,0,0.05);transition:all .15s ease;">
-        ← Back to All Homeworks
-      </a>
-      <a href="homework2.html" style="display:inline-flex;align-items:center;gap:6px;font-size:0.85rem;font-weight:600;color:var(--accent);text-decoration:none;padding:6px 14px;border-radius:8px;background:var(--card);border:1px solid var(--line);box-shadow:0 1px 2px rgba(0,0,0,0.05);transition:all .15s ease;">
-        Next: Homework 2 (Ethereum Pipeline) →
-      </a>
-    </nav>
-    <header>
-      <h1>Emanuele Orlandi, 2021953, Homework 1</h1>
-      <h2>private key → public key</h2>
-      <p class="sub">Curve <span class="mono">y² = x³ + 7 (mod p)</span>: a toy version of secp256k1 (the Ethereum
-        curve).</p>
+
+  <!-- Ambient Light Glow Effect -->
+  <div class="bg-ambient" aria-hidden="true">
+    <div class="ambient-blob ambient-blob-1"></div>
+    <div class="ambient-blob ambient-blob-2"></div>
+  </div>
+
+  <!-- Navigation Bar -->
+  <nav class="site-nav" aria-label="Main Navigation">
+    <div class="container nav-content">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <a href="index.html" class="nav-back-btn" title="Back to Portfolio">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>All Assignments</span>
+        </a>
+
+        <div class="brand-divider" style="width: 1px; height: 20px; background: var(--border-subtle);"></div>
+
+        <a href="index.html" class="nav-brand">
+          <span class="brand-title">Statistics Laboratory</span>
+          <span class="brand-subtitle">Homework 1 &bull; 2026/2027</span>
+        </a>
+      </div>
+
+      <div class="nav-actions">
+        <a href="homework2.html" class="nav-back-btn" title="Next: Homework 2">
+          <span>Next: HMWK 2 (Ethereum)</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+
+        <div class="nav-badge-author">
+          <span>Student:</span>
+          <strong>Emanuele Orlandi</strong>
+          <span class="mono">#2021953</span>
+        </div>
+
+        <a href="https://github.com/LeleOrlandi02/StatisticsHomework26-27" target="_blank" rel="noopener noreferrer" class="github-link-btn" title="GitHub Repository">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+        </a>
+
+        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle Dark/Light Mode" title="Toggle theme">
+          <svg class="theme-icon-light" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="theme-icon-dark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="hw1-container">
+
+    <!-- Hero Header -->
+    <header class="pipeline-hero">
+      <div class="hero-pill">
+        <span class="hero-pill-dot"></span>
+        <span>HMWK 1 &bull; Elliptic Curve Cryptography & One-Way Functions</span>
+      </div>
+
+      <h1 class="hero-title" style="margin-top: 10px;">
+        Toy ECC: From Private Key <br>
+        <span class="gradient-text">to Public Key</span>
+      </h1>
+
+      <p class="hero-description" style="max-width: 860px;">
+        An interactive laboratory exploring the toy elliptic curve <span class="mono">y² = x³ + 7 (mod p)</span>, modeled after Ethereum's secp256k1 curve. Compute scalar multiplication <span class="mono">Q = kG</span> via repeated addition and fast double-and-add algorithms, visualize chord-and-tangent group arithmetic in slow-motion, run empirical statistical diagnostics, and analyze one-way functions vs. cryptographic hashes.
+      </p>
     </header>
 
-    <section id="s1">
-      <h2>1. Parameters</h2>
-      <div class="controls">
-        <label>Prime field p
-          <select id="selP">
+    <!-- Visual Pipeline Architecture Diagram -->
+    <section class="pipeline-flow-banner" aria-label="ECC Pipeline Flow Diagram">
+      <div class="flow-steps-diagram">
+        <div class="flow-node active">
+          <span class="flow-node-title">Prime Field & Curve</span>
+          <span class="flow-node-sub">y² ≡ x³ + 7 (mod p)</span>
+        </div>
+        <div class="flow-arrow">
+          <span class="flow-arrow-label">Generator G</span>
+          <span>&rarr;</span>
+        </div>
+        <div class="flow-node active">
+          <span class="flow-node-title">Base Point G</span>
+          <span class="flow-node-sub">Point on Curve</span>
+        </div>
+        <div class="flow-arrow">
+          <span class="flow-arrow-label">Scalar k</span>
+          <span>&rarr;</span>
+        </div>
+        <div class="flow-node active">
+          <span class="flow-node-title">Private Key k</span>
+          <span class="flow-node-sub">k &isin; [1, n−1]</span>
+        </div>
+        <div class="flow-arrow">
+          <span class="flow-arrow-label">Double & Add</span>
+          <span>&rarr;</span>
+        </div>
+        <div class="flow-node active">
+          <span class="flow-node-title">Chord & Tangent</span>
+          <span class="flow-node-sub">Doubling & Addition</span>
+        </div>
+        <div class="flow-arrow">
+          <span class="flow-arrow-label">Q = kG</span>
+          <span>&rarr;</span>
+        </div>
+        <div class="flow-node active" style="border-color: #10b981; background: color-mix(in srgb, #10b981 10%, var(--bg-card));">
+          <span class="flow-node-title" style="color: #10b981;">Public Key Q</span>
+          <span class="flow-node-sub">Point on Subgroup</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 1: CURVE PARAMETERS & BASE POINT SELECTION
+         ==================================================================== -->
+    <section class="workbench-card" id="s1" aria-label="Parameters Workbench">
+      <div class="workbench-header">
+        <div class="workbench-title-group">
+          <h2>1. Parameters & Base Point Selection</h2>
+          <p>Select the finite field prime modulus $p$, choose the generator base point $G$, and specify the private scalar key $k$.</p>
+        </div>
+        <div class="btn-group">
+          <button class="btn-action primary" id="btnCompute">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+            Compute Q = kG
+          </button>
+        </div>
+      </div>
+
+      <!-- Controls Grid -->
+      <div class="controls-grid">
+        <div class="input-field-group">
+          <label for="selP">
+            <span>Prime Field (p):</span>
+            <span class="note">Modulus</span>
+          </label>
+          <select id="selP" class="input-select">
             <option value="17">17 (toy curve from the exercise)</option>
             <option value="1009">1009</option>
             <option value="10007">10007</option>
           </select>
-        </label>
-        <label>Base point G
-          <select id="selG"></select>
-        </label>
-        <label>Private key k
-          <input id="inK" type="number" min="1" step="1" value="6" style="width:110px">
-        </label>
-        <button id="btnCompute">Compute Q = kG</button>
+        </div>
+
+        <div class="input-field-group">
+          <label for="selG">
+            <span>Base Point (G):</span>
+            <span class="note">Generator</span>
+          </label>
+          <select id="selG" class="input-select"></select>
+        </div>
+
+        <div class="input-field-group">
+          <label for="inK">
+            <span>Private Key (k):</span>
+            <span class="note">Scalar multiplier</span>
+          </label>
+          <input id="inK" class="input-text" type="number" min="1" step="1" value="6">
+        </div>
       </div>
-      <div id="curveInfo" class="kv" style="margin-top:12px"></div>
+
+      <!-- Curve Info Output -->
+      <div class="kv-card">
+        <div id="curveInfo" class="kv"></div>
+      </div>
     </section>
 
-    <section id="s2">
-      <h2>2. Result</h2>
+    <!-- ====================================================================
+         SECTION 2: COMPUTATION RESULT & ALGORITHM COMPARISON
+         ==================================================================== -->
+    <section class="workbench-card" id="s2" aria-label="Results Workbench">
+      <div class="workbench-header">
+        <div class="workbench-title-group">
+          <h2>2. Public Key Computation Results</h2>
+          <p>Evaluating scalar point multiplication $Q = kG$ and comparing naive repeated addition against fast double-and-add.</p>
+        </div>
+      </div>
+
+      <!-- Public Key Showcase Output -->
       <div id="pubkey"></div>
-      <h3>Repeated addition: G, 2G, 3G, …, kG</h3>
-      <div id="tableWrap"></div>
-      <h3>Fast method: double-and-add</h3>
-      <div id="daaWrap"></div>
+
+      <!-- Repeated Addition Step Card -->
+      <div class="step-card" style="margin-top: 18px;">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <span class="step-badge">A</span>
+            <span class="step-name">Repeated Addition: G, 2G, 3G, …, kG</span>
+          </div>
+          <span class="step-primitive-tag">Linear Complexity O(k)</span>
+        </div>
+        <p class="step-desc">
+          Iteratively computes $(i)G = (i-1)G + G$ for $i = 2, \dots, k$. Requires $k - 1$ elliptic curve point additions.
+        </p>
+        <div id="tableWrap"></div>
+      </div>
+
+      <!-- Double-and-Add Step Card -->
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <span class="step-badge">B</span>
+            <span class="step-name">Fast Method: Double-and-Add</span>
+          </div>
+          <span class="step-primitive-tag">Logarithmic Complexity O(log k)</span>
+        </div>
+        <p class="step-desc">
+          Inspects the binary expansion of $k$. For each bit, doubles the current accumulator point, and adds $G$ if the bit is $1$. Drastically reduces operation count from $k-1$ to at most $2 \lfloor \log_2 k \rfloor$ point operations.
+        </p>
+        <div id="daaWrap"></div>
+      </div>
     </section>
 
-    <section id="s3">
-      <h2>3. Slow-motion visualization</h2>
-      <p class="note">Each step shows the chord rule: the line through P and Q (the tangent if P = Q) meets the curve at
-        a third
-        point R; the result P + Q is the reflection of R across the x-axis (in modular arithmetic: y → p − y).
-        Available for p = 17, where all the points fit on a readable grid.</p>
-      <div class="controls">
-        <label>Algorithm
-          <select id="selMode">
+    <!-- ====================================================================
+         SECTION 3: SLOW-MOTION CHORD-AND-TANGENT VISUALIZATION
+         ==================================================================== -->
+    <section class="workbench-card" id="s3" aria-label="Slow-motion Visualization">
+      <div class="workbench-header">
+        <div class="workbench-title-group">
+          <h2>3. Slow-Motion Chord-and-Tangent Interactive Animation</h2>
+          <p>
+            Visualizing the geometric chord-and-tangent law over the modular lattice $\mathbb{F}_{17}$: the line through $P$ and $Q$ meets the curve at a third point $R$, and $P + Q$ is the reflection of $R$ across the x-axis ($y \mapsto p - y$).
+          </p>
+        </div>
+        <div class="btn-group">
+          <button id="btnPlay" class="btn-action primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            Start
+          </button>
+          <button id="btnPause" class="btn-action">Pause</button>
+          <button id="btnStep" class="btn-action">Step &rarr;</button>
+          <button id="btnReset" class="btn-action">Reset</button>
+        </div>
+      </div>
+
+      <!-- Animation Controls Grid -->
+      <div class="controls-grid" style="align-items: end;">
+        <div class="input-field-group">
+          <label for="selMode">Algorithm:</label>
+          <select id="selMode" class="input-select">
             <option value="rep">Repeated addition</option>
             <option value="daa">Double-and-add</option>
           </select>
-        </label>
-        <label>Speed
-          <input id="rngSpeed" type="range" min="1" max="10" value="2">
-        </label>
-        <button id="btnPlay">Start</button>
-        <button id="btnPause" class="sec">Pause</button>
-        <button id="btnStep" class="sec">Step</button>
-        <button id="btnReset" class="sec">Reset</button>
+        </div>
+
+        <div class="input-field-group">
+          <label for="rngSpeed">
+            <span>Playback Speed:</span>
+            <span class="note">Rate</span>
+          </label>
+          <input id="rngSpeed" type="range" min="1" max="10" value="2" style="margin-top: 10px;">
+        </div>
       </div>
-      <div id="status" aria-live="polite"></div>
-      <canvas id="cv" width="560" height="560"></canvas>
+
+      <!-- Live status text -->
+      <div id="status" class="status-msg-box" aria-live="polite"></div>
+
+      <!-- Interactive Canvas -->
+      <div class="canvas-container">
+        <canvas id="cv" width="560" height="560"></canvas>
+      </div>
     </section>
 
-    <section id="s4">
-      <h2>4. Statistical exploration</h2>
-      <p class="note">Uses the curve and base point chosen above and computes Q<sub>k</sub> = kG for all keys k = 1 …
-        n−1
-        (n = order of G). With p = 17 there are very few samples: also try p = 1009 and p = 10007.</p>
-      <div class="controls"><button id="btnStats">Run analysis</button></div>
+    <!-- ====================================================================
+         SECTION 4: STATISTICAL EXPLORATION
+         ==================================================================== -->
+    <section class="workbench-card" id="s4" aria-label="Statistical Exploration">
+      <div class="workbench-header">
+        <div class="workbench-title-group">
+          <h2>4. Empirical Statistical Exploration</h2>
+          <p>Computes $Q_k = kG$ across the entire subgroup $k = 1 \dots n-1$. Evaluates coordinate histograms, bit frequencies, Pearson correlation, Strict Avalanche Criterion (SAC), and brute-force ECDLP hardness.</p>
+        </div>
+        <div class="btn-group">
+          <button class="btn-action primary" id="btnStats">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            Run Statistical Analysis
+          </button>
+        </div>
+      </div>
+
       <div id="statsOut"></div>
     </section>
 
-    <section id="s5">
-      <h2>5. Discussion: one-way function vs hash function</h2>
-      <h3>Sensible properties for a one-way function (k ↦ kG)</h3>
-      <ul>
-        <li><b>Cost asymmetry.</b> Forward costs O(log k) operations (double-and-add); backward is the ECDLP. This is
-          not a statistical property: none of the tests above measure the difficulty of inversion, and failing a
-          uniformity test does not break security.</li>
-        <li><b>Injectivity.</b> For k in [1, n−1] every private key gives a different point (no collisions); for k ≥ n
-          the trivial collisions k ≡ k mod n apply. The map does not compress, so "collision resistance" boils down to
-          "key uniqueness".</li>
-        <li><b>Uniformity in the subgroup.</b> If k is uniform, Q is uniform among the points generated by G (the map is
-          bijective): a well-generated private key does not produce a skewed public key.</li>
-        <li><b>Intended algebraic structure.</b> Q<sub>k1+k2</sub> = Q<sub>k1</sub> + Q<sub>k2</sub> and
-          x(Q<sub>k</sub>) = x(Q<sub>n−k</sub>). They are needed for signatures, ECDH and for recovering the public key
-          from a signature; we verified them in the tests.</li>
-      </ul>
-      <h3>Typical hash function properties (not required of kG)</h3>
-      <ul>
-        <li><b>Avalanche effect / SAC</b> (one input bit changes about half of the output) and independence of output
-          bits: these are design goals of Keccak or SHA-2. For kG they are not needed and not guaranteed: k and k+1 give
-          points related by +G.</li>
-        <li><b>Pseudorandom output on bit strings.</b> Point coordinates have constraints: x &lt; p (the high bits are
-          unbalanced), only about half of the x values admit a point, y is determined by x up to sign (y² = x³ + 7).
-          This is why the Ethereum address is a Keccak-256 hash of the public key and not the raw public key.</li>
-        <li><b>Collision, preimage and second-preimage resistance</b> on arbitrary-length inputs and compression to a
-          fixed length: these are requirements of a hash, not of a fixed-length one-way function like kG.</li>
-        <li><b>Absence of homomorphisms.</b> A good hash has no algebraic relations between H(a), H(b) and H(a⊕b) or
-          H(a+b). For kG, instead, they are present by construction.</li>
-      </ul>
-      <p class="note">Summary: statistics such as avalanche, correlations and bit uniformity speak to a hash; for kG
-        what matters is the group structure, injectivity, uniformity in the subgroup and, above all, the hardness of the
-        ECDLP, which cannot be measured this way.</p>
+    <!-- ====================================================================
+         SECTION 5: THEORETICAL DISCUSSION: ONE-WAY FUNCTION VS HASH FUNCTION
+         ==================================================================== -->
+    <section class="workbench-card" id="s5" aria-label="Theoretical Discussion">
+      <div class="workbench-title-group" style="margin-bottom: 16px;">
+        <h2>5. Theoretical Discussion: One-Way Function ($k \mapsto kG$) vs. Hash Function</h2>
+        <p>A rigorous conceptual comparison between the mathematical trapdoor of scalar multiplication and the pseudorandom compression of cryptographic hash functions.</p>
+      </div>
+
+      <div class="taxonomy-grid">
+        <!-- Card 1: Sensible Properties of OWF -->
+        <div class="taxonomy-card">
+          <div>
+            <div class="taxonomy-card-header">
+              <div class="taxonomy-icon">🔑</div>
+              <div>
+                <h3>Sensible Properties of a One-Way Function</h3>
+                <span class="flow-node-sub">$k \mapsto kG$ on Elliptic Curves</span>
+              </div>
+            </div>
+            <ul>
+              <li><strong>Cost Asymmetry:</strong> Forward multiplication costs $O(\log k)$ via double-and-add; backward inversion is the <em>Elliptic Curve Discrete Logarithm Problem (ECDLP)</em>. Note: security is not measured by statistical uniformity, but by the hardness of the ECDLP ($O(\sqrt{n})$ Pollard's rho).</li>
+              <li><strong>Subgroup Injectivity:</strong> For $k \in [1, n-1]$, every private key maps to a unique point on the subgroup (no collisions). The map does not compress; collision resistance is key uniqueness.</li>
+              <li><strong>Uniformity in the Subgroup:</strong> If private key $k$ is chosen uniformly at random, public point $Q$ is perfectly uniform among all points generated by $G$ (bijective mapping).</li>
+              <li><strong>Intended Algebraic Group Structure:</strong> Satisfies $Q_{k_1 + k_2} = Q_{k_1} + Q_{k_2}$ and $x(Q_k) = x(Q_{n-k})$. These homomorphic relations are essential for signatures (ECDSA), Diffie-Hellman (ECDH), and public key recovery.</li>
+            </ul>
+          </div>
+          <ul class="taxonomy-meta-list">
+            <li><span>Inversion Difficulty:</span> <span>ECDLP ($O(\sqrt{n})$)</span></li>
+            <li><span>Group Homomorphism:</span> <span>Present by design</span></li>
+            <li><span>Ethereum Primitive:</span> <span>secp256k1 (Digital Signatures)</span></li>
+          </ul>
+        </div>
+
+        <!-- Card 2: Typical Hash Function Properties -->
+        <div class="taxonomy-card">
+          <div>
+            <div class="taxonomy-card-header">
+              <div class="taxonomy-icon">⚡</div>
+              <div>
+                <h3>Typical Hash Function Properties</h3>
+                <span class="flow-node-sub">Not Required of Scalar Multiplication ($kG$)</span>
+              </div>
+            </div>
+            <ul>
+              <li><strong>Strict Avalanche Criterion (SAC):</strong> Flipping a single input bit changes ~50% of output bits independently. For $kG$, this is neither guaranteed nor required: consecutive keys $k$ and $k+1$ yield points differing by $+G$.</li>
+              <li><strong>Pseudorandomness on Bit Strings:</strong> Hash outputs must be indistinguishable from random bits. By contrast, curve points have strict algebraic constraints: $x < p$, only ~half of $x$ admit points on the curve, and $y^2 = x^3 + 7 \pmod p$.</li>
+              <li><strong>Compression & Arbitrary Input:</strong> A hash function compresses variable-length messages into a fixed digest ($256$ bits) with preimage and second-preimage resistance. $kG$ does not compress.</li>
+              <li><strong>Absence of Homomorphisms:</strong> A good hash must have no linear or algebraic relations ($H(a \oplus b) \ne H(a) \oplus H(b)$). For $kG$, group structure is fundamental.</li>
+            </ul>
+          </div>
+          <ul class="taxonomy-meta-list">
+            <li><span>Strict Avalanche (SAC):</span> <span>Not required of $kG$</span></li>
+            <li><span>Bit Independence:</span> <span>Subject to $y^2 = x^3 + 7$</span></li>
+            <li><span>Ethereum Primitive:</span> <span>Keccak-256 (Compression)</span></li>
+          </ul>
+        </div>
+
+        <!-- Card 3: Synthesis & Division of Labor -->
+        <div class="taxonomy-card">
+          <div>
+            <div class="taxonomy-card-header">
+              <div class="taxonomy-icon">🛡️</div>
+              <div>
+                <h3>The Division of Labor in Ethereum</h3>
+                <span class="flow-node-sub">Why We Need Both Primitives</span>
+              </div>
+            </div>
+            <p>
+              This theoretical distinction directly explains the architecture of Ethereum wallets:
+            </p>
+            <ul>
+              <li><strong>secp256k1 ($k \mapsto kG$)</strong> provides the mathematical trapdoor required for asymmetric authorization: users sign transactions with private key $k$, and the EVM verifies the signature against public key $Q$.</li>
+              <li><strong>Keccak-256 ($Q \mapsto \text{Address}$)</strong> takes the 64-byte public key coordinates, strips all algebraic structure, compresses the data into a 20-byte digest, and destroys mathematical homomorphisms to safeguard storage and privacy.</li>
+            </ul>
+          </div>
+          <ul class="taxonomy-meta-list">
+            <li><span>Public Key Role:</span> <span>Authorization & Signatures</span></li>
+            <li><span>Hash Function Role:</span> <span>Compression & Obfuscation</span></li>
+            <li><span>Combined Pipeline:</span> <span>Entropy &rarr; $k$ &rarr; $Q$ &rarr; Hash &rarr; Address</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Comparative Summary Table -->
+      <div class="table-container">
+        <table class="styled-table">
+          <thead>
+            <tr>
+              <th>Cryptographic Property</th>
+              <th>One-Way Function ($k \mapsto kG$)</th>
+              <th>Cryptographic Hash ($m \mapsto \text{Keccak-256}(m)$)</th>
+              <th>Role & Significance in Ethereum</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Inversion Hardness</strong></td>
+              <td>ECDLP ($O(2^{128})$ operations on secp256k1)</td>
+              <td>Preimage Resistance ($O(2^{256})$ brute force)</td>
+              <td>Protects private keys from being recovered from public keys</td>
+            </tr>
+            <tr>
+              <td><strong>Algebraic Homomorphism</strong></td>
+              <td>Yes: $Q_{a+b} = Q_a + Q_b$, $x(Q_k) = x(Q_{n-k})$</td>
+              <td>No: Destroyed by sponge permutations</td>
+              <td>Enables digital signatures (ECDSA) and key recovery</td>
+            </tr>
+            <tr>
+              <td><strong>Strict Avalanche Criterion</strong></td>
+              <td>Not required ($k$ and $k+1$ related by $+G$)</td>
+              <td>Essential: ~50% bit flip on 1-bit delta</td>
+              <td>Prevents pattern leakage and correlation attacks in hashes</td>
+            </tr>
+            <tr>
+              <td><strong>Compression</strong></td>
+              <td>No: Fixed-length scalar to curve point</td>
+              <td>Yes: Arbitrary byte stream to 32 bytes</td>
+              <td>Keccak compresses 65-byte pubkeys to 20-byte addresses</td>
+            </tr>
+            <tr>
+              <td><strong>Primary Purpose</strong></td>
+              <td>Asymmetric identity & digital signature verification</td>
+              <td>Integrity, address compression & state proofs</td>
+              <td>Wallet authorization and secure state storage in EVM</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </section>
+
   </main>
 
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div class="footer-text">
+        <span>Course of Statistics &bull; Academic Year 2026/2027</span><br>
+        <span>Author: <strong>Emanuele Orlandi</strong> (Matricola: <span class="mono">2021953</span>)</span>
+      </div>
+
+      <div class="footer-links">
+        <a href="https://github.com/LeleOrlandi02/StatisticsHomework26-27" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub Repository</a>
+        <a href="index.html" class="footer-link">Portfolio Index</a>
+        <a href="homework2.html" class="footer-link">Homework 2 (Ethereum Pipeline)</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Core JavaScript Logic & Calculations -->
   <script>
-    // ==== CORE ====
+    // ==== THEME TOGGLE SUPPORT ====
+    function initThemeToggle() {
+      const themeToggleBtn = document.getElementById('themeToggleBtn');
+      if (!themeToggleBtn) return;
+
+      const currentTheme = localStorage.getItem('theme') || 
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+      document.documentElement.setAttribute('data-theme', currentTheme);
+
+      themeToggleBtn.addEventListener('click', () => {
+        const activeTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = activeTheme === 'dark' ? 'light' : 'dark';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+
+        // Re-render canvas if initialized
+        if (typeof resetAnim === 'function') resetAnim();
+        if (typeof runStats === 'function' && $('statsOut').children.length > 0) runStats();
+      });
+    }
+
+    // ==== CORE MATHEMATICAL ARITHMETIC ====
     const mod = (a, p) => ((a % p) + p) % p;
     function inv(a, p) {
       a = mod(a, p); let t = 0, nt = 1, r = p, nr = a;
-      while (nr !== 0) { const q = Math.floor(r / nr);[t, nt] = [nt, t - q * nt];[r, nr] = [nr, r - q * nr]; }
+      while (nr !== 0) { const q = Math.floor(r / nr); [t, nt] = [nt, t - q * nt]; [r, nr] = [nr, r - q * nr]; }
       if (r !== 1) throw new Error('not invertible');
       return mod(t, p);
     }
@@ -475,7 +1160,7 @@
     }
     // ==== END CORE ====
 
-    // ---------- UI ----------
+    // ---------- UI LOGIC ----------
     const $ = (id) => document.getElementById(id);
     const fmt = (P) => P ? `(${P[0]}, ${P[1]})` : '∞';
     const curves = {}, orders = new Map();
@@ -525,42 +1210,64 @@
       const n = orders.get(p + ':' + G.join(',')) || orderOf(G, C);
       cur = { C, G, n, k };
       const N = C.points.length + 1;
+      
       $('curveInfo').innerHTML =
-        `<span>Curve</span><span class="mono">y² = x³ + 7 (mod ${p}), a = 0, b = 7</span>` +
-        `<span>Base point</span><span class="mono">G = ${fmt(G)} — on curve: ${onCurve(G, C) ? 'yes' : 'NO'} (${G[1]}² ≡ ${(G[1] * G[1]) % p}, x³+7 ≡ ${((G[0] ** 3) + 7) % p} mod ${p})</span>` +
-        `<span>Curve points</span><span>${N} (including ∞)</span>` +
-        `<span>Order of G</span><span>n = ${n} (cofactor ${N / n})</span>`;
+        `<span>Curve Equation:</span><span class="mono">y² ≡ x³ + 7 (mod ${p}), a = 0, b = 7</span>` +
+        `<span>Base Generator G:</span><span class="mono">G = ${fmt(G)} &bull; On curve: <strong>${onCurve(G, C) ? 'Yes ✓' : 'NO ✗'}</strong> (${G[1]}² ≡ ${(G[1] * G[1]) % p}, x³+7 ≡ ${((G[0] ** 3) + 7) % p} mod ${p})</span>` +
+        `<span>Group Order #E:</span><span>${N} curve points (including point at infinity &infin;)</span>` +
+        `<span>Subgroup Order n:</span><span>n = ${n} (Subgroup cofactor h = ${(N / n).toFixed(2)})</span>`;
+
       const Q = mulDAA(k, G, C);
       let check = '';
-      if (k <= 200000) { const Q2 = mulRepeated(k, G, C); check = (fmt(Q) === fmt(Q2)) ? '<span class="note">Repeated addition and double-and-add give the same point ✓</span>' : '<span class="warn">Mismatch between the two methods!</span>'; }
+      if (k <= 200000) {
+        const Q2 = mulRepeated(k, G, C);
+        check = (fmt(Q) === fmt(Q2))
+          ? '<span style="color:#10b981; font-weight:600;">✓ Verified: Repeated addition and double-and-add match exactly.</span>'
+          : '<span class="warn">Mismatch between the two computation methods!</span>';
+      }
+
       $('pubkey').innerHTML =
-        `<div class="pub"><div class="lbl">TOY PUBLIC KEY</div>` +
-        `<div class="mono big">Q = ${k}·G = ${fmt(Q)}</div>` +
-        `<div class="note">private key k = ${k}${k >= n ? ` — warning: k ≥ n = ${n}, so it is equivalent to k mod n = ${k % n}` : ''}</div>${check}</div>`;
-      // table
-      const maxRows = 64; let rows = '', R = null, prev = null;
+        `<div class="address-showcase">` +
+        `  <div>` +
+        `    <div class="address-showcase-label">Verified Toy Public Key (Subgroup Point)</div>` +
+        `    <div class="address-showcase-val">Q = ${k}&middot;G = ${fmt(Q)}</div>` +
+        `    <div style="font-size:0.82rem; color:var(--text-muted); margin-top:4px;">` +
+        `      Private key k = <strong>${k}</strong>${k >= n ? ` &bull; <span class="warn">Warning: k &ge; n (${n}), so it is congruent to k mod n = ${k % n}</span>` : ''}` +
+        `    </div>` +
+        `    ${check ? `<div style="margin-top:4px;">${check}</div>` : ''}` +
+        `  </div>` +
+        `  <button class="btn-action primary" onclick="navigator.clipboard.writeText('${fmt(Q)}'); this.textContent = 'Copied!'; setTimeout(() => this.textContent = 'Copy Point', 1500);">` +
+        `    Copy Point` +
+        `  </button>` +
+        `</div>`;
+
+      // Table for repeated addition
+      const maxRows = 64; let rows = '', prev = null;
       for (let i = 1; i <= Math.min(k, maxRows); i++) {
         const info = addInfo(prev, G, C); const R2 = info.R;
         const op = i === 1 ? '—' : (info.type === 'doubling' ? 'doubling' : (info.type === 'P+(-P)=O' ? 'P + (−P) = ∞' : `${i - 1}G + G`));
-        rows += `<tr><td>${i}</td><td class="mono">${fmt(R2)}</td><td>${op}</td><td class="mono">${info.lam !== undefined ? 'λ = ' + info.lam : ''}</td></tr>`;
+        rows += `<tr><td>${i}</td><td class="mono">${fmt(R2)}</td><td>${op}</td><td class="mono">${info.lam !== undefined ? '&lambda; = ' + info.lam : '—'}</td></tr>`;
         prev = R2;
         if (i === 1) prev = G;
       }
-      if (k > maxRows) rows += `<tr><td>…</td><td colspan="3" class="note">table truncated to ${maxRows} rows</td></tr><tr><td>${k}</td><td class="mono">${fmt(Q)}</td><td colspan="2">via double-and-add</td></tr>`;
-      $('tableWrap').innerHTML = `<div class="scroll"><table><thead><tr><th>n</th><th>nG</th><th>operation</th><th>slope</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-      // daa
+      if (k > maxRows) rows += `<tr><td>…</td><td colspan="3" class="note">Table truncated to first ${maxRows} rows for UI performance</td></tr><tr><td>${k}</td><td class="mono">${fmt(Q)}</td><td colspan="2">Computed via double-and-add</td></tr>`;
+      $('tableWrap').innerHTML = `<div class="table-container scroll"><table class="styled-table"><thead><tr><th>Scalar i</th><th>Point i·G</th><th>Group Operation</th><th>Chord/Tangent Slope (&lambda;)</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+
+      // Table for double-and-add
       const bits = k.toString(2); let r = null, drows = '';
       for (let i = 0; i < bits.length; i++) {
         const before = r; r = addInfo(r, r, C).R; const dbl = r; let add = '—';
         if (bits[i] === '1') { r = addInfo(r, G, C).R; add = fmt(r); }
-        drows += `<tr><td>${i + 1}</td><td class="mono">${bits[i]}</td><td class="mono">${fmt(before)} → ${fmt(dbl)}</td><td class="mono">${add}</td></tr>`;
+        drows += `<tr><td>${i + 1}</td><td class="mono">${bits[i]}</td><td class="mono">${fmt(before)} &rarr; ${fmt(dbl)}</td><td class="mono">${add}</td></tr>`;
       }
-      $('daaWrap').innerHTML = `<p class="note">k = ${k} in binary = <span class="mono">${bits}</span>: ${bits.length} doublings and ${[...bits].filter(b => b === '1').length} additions instead of ${k - 1} additions.</p>` +
-        `<div class="scroll"><table><thead><tr><th>#</th><th>bit</th><th>R ← 2R</th><th>R ← R + G</th></tr></thead><tbody>${drows}</tbody></table></div>`;
+      $('daaWrap').innerHTML = 
+        `<p class="note" style="margin-bottom:8px;">k = <strong>${k}</strong> in binary = <span class="mono" style="font-weight:700; color:var(--accent-primary);">${bits}</span>: <strong>${bits.length}</strong> doublings and <strong>${[...bits].filter(b => b === '1').length}</strong> additions (${bits.length + [...bits].filter(b => b === '1').length} total operations) instead of ${k - 1} naive additions.</p>` +
+        `<div class="table-container scroll"><table class="styled-table"><thead><tr><th>Bit #</th><th>Bit Val</th><th>Doubling (R &larr; 2R)</th><th>Addition if bit=1 (R &larr; R + G)</th></tr></thead><tbody>${drows}</tbody></table></div>`;
+
       resetAnim();
     }
 
-    // ---------- animation ----------
+    // ---------- ANIMATION ----------
     const cv = $('cv'), ctx = cv.getContext('2d');
     const anim = { token: 0, paused: false, stepReq: false, running: false };
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -599,10 +1306,10 @@
       anim.token++; anim.paused = false; anim.running = false;
       const ok = cur.C && cur.C.p <= 64;
       ['btnPlay', 'btnPause', 'btnStep'].forEach(id => $(id).disabled = !ok);
-      if (!ok) { ctx.clearRect(0, 0, cv.width, cv.height); cv.style.display = 'none'; msg('Animation is only available for p = 17: choose that curve in the parameters.'); return; }
+      if (!ok) { ctx.clearRect(0, 0, cv.width, cv.height); cv.style.display = 'none'; msg('Animation is only available for p = 17: select that curve above to view.'); return; }
       cv.style.display = 'block';
       drawScene({ trail: [{ pt: cur.G, label: 'G' }] });
-      msg(`Ready: G = ${fmt(cur.G)}, k = ${cur.k}. Press Start (or Pause and then Step to go one step at a time).`);
+      msg(`Ready: G = ${fmt(cur.G)}, k = ${cur.k}. Press <strong>Start</strong> (or <strong>Step</strong> to step through slowly).`);
     }
     async function tick(my) {
       if (anim.token !== my) throw 'cancel';
@@ -621,19 +1328,19 @@
           const sc = { trail, P: s.P, Q: s.Q };
           msg(`<b>${s.label}</b>: P = ${fmt(s.P)}, Q = ${fmt(s.Q)}.`); drawScene(sc); await tick(my);
           if (s.info.lam === undefined) {
-            if (s.info.R) { sc.res = s.info.R; sc.R = s.info.R; msg(`One of the two is ∞: the result is the other one, ${fmt(s.info.R)}.`); drawScene(sc); await tick(my); trail.push({ pt: s.info.R, label: s.resLabel }); }
+            if (s.info.R) { sc.res = s.info.R; sc.R = s.info.R; msg(`One of the two is ∞: result is the other point, ${fmt(s.info.R)}.`); drawScene(sc); await tick(my); trail.push({ pt: s.info.R, label: s.resLabel }); }
             else { msg('Result: ∞ (point at infinity).'); await tick(my); }
             continue;
           }
           const p = C.p; sc.line = [];
           if (s.P[0] === s.Q[0]) for (let y = 0; y < p; y++) sc.line.push([s.P[0], y]);
           else for (let x = 0; x < p; x++) sc.line.push([x, mod(s.info.lam * (x - s.P[0]) + s.P[1], p)]);
-          msg(`${s.info.type === 'doubling' ? 'Tangent at P' : 'Line through P and Q'}: slope λ = ${s.info.lam} (mod ${p}). The orange dots are the line.`); drawScene(sc); await tick(my);
-          if (s.info.R === null) { msg('P and Q are opposites: the line is vertical and has no third point, so P + Q = ∞.'); await tick(my); continue; }
+          msg(`${s.info.type === 'doubling' ? 'Tangent at P' : 'Line through P and Q'}: slope λ = ${s.info.lam} (mod ${p}). Orange dots show the line.`); drawScene(sc); await tick(my);
+          if (s.info.R === null) { msg('P and Q are opposites: line is vertical, no third point, so P + Q = ∞.'); await tick(my); continue; }
           sc.R = [s.info.R[0], mod(-s.info.R[1], p)];
-          msg(`Third intersection with the curve: R = ${fmt(sc.R)} (red cross).`); drawScene(sc); await tick(my);
+          msg(`Third intersection with curve: R = ${fmt(sc.R)} (red cross).`); drawScene(sc); await tick(my);
           sc.res = s.info.R;
-          msg(`Reflection of R across the x-axis (y → ${p} − y): <b>${s.resLabel} = ${fmt(s.info.R)}</b>.`); drawScene(sc); await tick(my);
+          msg(`Reflection of R across x-axis (y → ${p} − y): <b>${s.resLabel} = ${fmt(s.info.R)}</b>.`); drawScene(sc); await tick(my);
           trail.push({ pt: s.info.R, label: s.resLabel });
         }
         drawScene({ trail });
@@ -647,16 +1354,17 @@
     $('btnReset').onclick = () => { $('btnPause').textContent = 'Pause'; resetAnim(); };
     $('selMode').onchange = () => { $('btnPause').textContent = 'Pause'; resetAnim(); };
 
-    // ---------- statistics ----------
+    // ---------- STATISTICS ----------
     function bars(vals, { w = 300, h = 100, expected = null, l0 = '', l1 = '', title = '' } = {}) {
       const m = Math.max(...vals, expected || 0) || 1, bw = w / vals.length;
       let s = `<svg viewBox="0 0 ${w} ${h + 16}" class="chart" role="img" aria-label="${title}">`;
-      vals.forEach((v, i) => { const bh = v / m * h; s += `<rect x="${(i * bw + 1).toFixed(1)}" y="${(h - bh).toFixed(1)}" width="${Math.max(1, bw - 2).toFixed(1)}" height="${bh.toFixed(1)}" fill="var(--accent)"/>`; });
-      if (expected != null) { const y = h - expected / m * h; s += `<line x1="0" x2="${w}" y1="${y}" y2="${y}" stroke="var(--warn)" stroke-dasharray="4 3"/>`; }
-      s += `<text x="0" y="${h + 12}" font-size="10" fill="var(--muted)">${l0}</text><text x="${w}" y="${h + 12}" font-size="10" fill="var(--muted)" text-anchor="end">${l1}</text></svg>`;
+      vals.forEach((v, i) => { const bh = v / m * h; s += `<rect x="${(i * bw + 1).toFixed(1)}" y="${(h - bh).toFixed(1)}" width="${Math.max(1, bw - 2).toFixed(1)}" height="${bh.toFixed(1)}" fill="var(--accent-primary)"/>`; });
+      if (expected != null) { const y = h - expected / m * h; s += `<line x1="0" x2="${w}" y1="${y}" y2="${y}" stroke="var(--status-pending-text)" stroke-dasharray="4 3"/>`; }
+      s += `<text x="0" y="${h + 12}" font-size="10" fill="var(--text-muted)">${l0}</text><text x="${w}" y="${h + 12}" font-size="10" fill="var(--text-muted)" text-anchor="end">${l1}</text></svg>`;
       return s;
     }
     const f3 = (v) => Number.isNaN(v) ? 'n/a' : v.toFixed(3);
+
     function runStats() {
       const { C, G, n } = cur; if (!C) { compute(); }
       const S = computeStats(cur.C, cur.G, cur.n), out = $('statsOut');
@@ -664,40 +1372,52 @@
       const small = S.expected < 5;
       const pv = (p) => p < 0.001 ? '&lt; 0.001' : p.toFixed(3);
       let h = '';
-      h += `<div class="card"><div class="kv">` +
-        `<span>Curve / G</span><span class="mono">p = ${S.p}, G = ${fmt(cur.G)}</span>` +
-        `<span>Keys k analyzed</span><span>${S.N} (k = 1 … n−1, n = ${S.n})</span>` +
-        `<span>Distinct points Q<sub>k</sub></span><span>${S.distinctPts} of ${S.N}: ${S.distinctPts === S.N ? 'no collisions for k < n' : 'collisions!'}</span>` +
-        `<span>Distinct x values</span><span>${S.distinctX} (the curve has ${S.curveX} admissible x values out of ${S.p})</span>` +
-        `<span>Symmetry x(Q<sub>k</sub>) = x(Q<sub>n−k</sub>)</span><span>${S.sym ? 'verified for every k ✓ (Q<sub>n−k</sub> = −Q<sub>k</sub>)' : 'not verified'}</span>` +
-        `<span>Homomorphism Q<sub>k1+k2</sub> = Q<sub>k1</sub> + Q<sub>k2</sub></span><span>${S.homo.ok}/${S.homo.T} random pairs ✓</span>` +
+      
+      // Summary KV Card
+      h += `<div class="kv-card" style="margin-bottom:14px;"><div class="kv">` +
+        `<span>Curve / Base Point:</span><span class="mono">p = ${S.p}, G = ${fmt(cur.G)}</span>` +
+        `<span>Keys Analyzed:</span><span>${S.N} (k = 1 … n−1, n = ${S.n})</span>` +
+        `<span>Distinct Points Q<sub>k</sub>:</span><span>${S.distinctPts} of ${S.N}: ${S.distinctPts === S.N ? '<strong style="color:#10b981;">No collisions for k < n (Injective) ✓</strong>' : 'Collisions!'}</span>` +
+        `<span>Distinct X Values:</span><span>${S.distinctX} (Curve has ${S.curveX} admissible x values out of ${S.p})</span>` +
+        `<span>Symmetry x(Q<sub>k</sub>) = x(Q<sub>n−k</sub>):</span><span>${S.sym ? '<strong style="color:#10b981;">Verified for every k ✓ (Q<sub>n−k</sub> = −Q<sub>k</sub>)</strong>' : 'Not verified'}</span>` +
+        `<span>Homomorphism Test:</span><span>${S.homo.ok}/${S.homo.T} random pairs Q<sub>k1+k2</sub> = Q<sub>k1</sub> + Q<sub>k2</sub> verified ✓</span>` +
         `</div></div>`;
-      h += `<div class="grid2" style="margin-top:14px">`;
-      h += `<div class="card"><h3>Distribution of x (${S.B} ${S.p <= 17 ? 'values' : 'bins'})</h3>${bars(S.hx, { expected: S.expected, l0: '0', l1: String(S.p - 1), title: 'histogram of x' })}` +
-        `<div class="note">χ² = ${S.cx.toFixed(1)} (df ${S.B - 1}), p ≈ ${pv(S.px)}${small ? ' <span class="warn">— expected &lt; 5 per bin: test not reliable</span>' : ''}. Dashed line = uniform frequency.</div></div>`;
-      h += `<div class="card"><h3>Distribution of y</h3>${bars(S.hy, { expected: S.expected, l0: '0', l1: String(S.p - 1), title: 'histogram of y' })}` +
-        `<div class="note">χ² = ${S.cy.toFixed(1)}, p ≈ ${pv(S.py)}. Q and −Q have the same x and opposite y (y ↔ p−y), so the distribution of y is symmetric around p/2.</div></div>`;
-      h += `<div class="card"><h3>Bits of x: fraction of 1s (bit 0 = least significant)</h3>${bars(S.bitsX, { h: 90, expected: 0.5, l0: 'bit 0', l1: 'bit ' + (S.L - 1), title: 'bit frequency of x' }).replace(/<svg /, '<svg style="max-width:100%" ')}` +
-        `<div class="note">Ideal is 0.5. The high bits are unbalanced because x &lt; p and p is not a power of 2.</div></div>`;
-      h += `<div class="card"><h3>Bits of y: fraction of 1s</h3>${bars(S.bitsY, { h: 90, expected: 0.5, l0: 'bit 0', l1: 'bit ' + (S.L - 1), title: 'bit frequency of y' })}` +
+
+      h += `<div class="grid2">`;
+      h += `<div class="stat-card"><h3>Distribution of X (${S.B} ${S.p <= 17 ? 'values' : 'bins'})</h3>${bars(S.hx, { expected: S.expected, l0: '0', l1: String(S.p - 1), title: 'histogram of x' })}` +
+        `<div class="note">χ² = ${S.cx.toFixed(1)} (df ${S.B - 1}), p ≈ ${pv(S.px)}${small ? ' <span class="warn">— expected &lt; 5 per bin: test not reliable</span>' : ''}. Dashed line = uniform expectation.</div></div>`;
+
+      h += `<div class="stat-card"><h3>Distribution of Y</h3>${bars(S.hy, { expected: S.expected, l0: '0', l1: String(S.p - 1), title: 'histogram of y' })}` +
+        `<div class="note">χ² = ${S.cy.toFixed(1)}, p ≈ ${pv(S.py)}. Points Q and −Q share x and have opposite y ($y \leftrightarrow p-y$), giving symmetric distribution around $p/2$.</div></div>`;
+
+      h += `<div class="stat-card"><h3>Bits of X: Fraction of 1s (Bit 0 = LSB)</h3>${bars(S.bitsX, { h: 90, expected: 0.5, l0: 'bit 0', l1: 'bit ' + (S.L - 1), title: 'bit frequency of x' }).replace(/<svg /, '<svg style="max-width:100%" ')}` +
+        `<div class="note">Ideal is 0.5. High bits are skewed because $x < p$ and $p$ is not a power of 2.</div></div>`;
+
+      h += `<div class="stat-card"><h3>Bits of Y: Fraction of 1s</h3>${bars(S.bitsY, { h: 90, expected: 0.5, l0: 'bit 0', l1: 'bit ' + (S.L - 1), title: 'bit frequency of y' })}` +
         `<div class="note">Values: ${S.bitsY.map(v => v.toFixed(2)).join(', ')}</div></div>`;
-      h += `<div class="card"><h3>Input → output correlation (Pearson)</h3><div class="kv">` +
-        `<span>r(k, x)</span><span class="mono">${f3(S.corr.kx)}</span><span>r(k, y)</span><span class="mono">${f3(S.corr.ky)}</span>` +
-        `<span>r(x, y)</span><span class="mono">${f3(S.corr.xy)}</span><span>r(x<sub>k</sub>, x<sub>k+1</sub>)</span><span class="mono">${f3(S.corr.lag)}</span></div>` +
-        `<div class="note">Values close to 0: no linear dependence. Note: r(k, x) is exactly 0 because of the symmetry x(Q<sub>k</sub>) = x(Q<sub>n−k</sub>), not because of "randomness"; and the absence of correlation does not imply the absence of structure: Q<sub>k+1</sub> = Q<sub>k</sub> + G.</div></div>`;
-      h += `<div class="card"><h3>Avalanche effect (flipping 1 bit of k)</h3><table><thead><tr><th>map</th><th>output bits changed</th></tr></thead><tbody>` +
-        `<tr><td>identity k ↦ k</td><td class="mono">${(S.aval.identity * 100).toFixed(1)}%</td></tr>` +
-        `<tr><td>non-cryptographic mixer (reference)</td><td class="mono">${(S.aval.mixer * 100).toFixed(1)}%</td></tr>` +
-        `<tr><td>x of kG</td><td class="mono">${(S.aval.eccX * 100).toFixed(1)}%</td></tr>` +
-        `<tr><td>(x, y) of kG</td><td class="mono">${(S.aval.eccXY * 100).toFixed(1)}%</td></tr></tbody></table>` +
-        `<div class="note">${S.aval.trials} trials. A good hash tends to 50%. With such a small p the difference between ECC and the reference is not very informative; what matters is that for kG the avalanche effect is not a requirement.</div></div>`;
-      h += `<div class="card"><h3>Points (x, y) of Q<sub>k</sub></h3><canvas id="cvScatter" width="340" height="340"></canvas><div class="note">Color = k. The "mirror lattice" structure (symmetry y ↔ p−y) is visible.</div></div>`;
-      h += `<div class="card"><h3>Brute-force inversion (ECDLP)</h3><div class="kv">` +
-        `<span>Random secret</span><span class="mono">k = ${S.brute.secret}, Q = ${fmt(S.brute.target)}</span>` +
-        `<span>Found after</span><span class="mono">${S.brute.found} steps (${S.brute.ms} ms)</span></div>` +
-        `<div class="note">With n ≈ ${S.n} it is instant. For secp256k1, n ≈ 2<sup>256</sup>: the best generic attacks (Pollard rho) require about 2<sup>128</sup> operations.</div></div>`;
+
+      h += `<div class="stat-card"><h3>Input &rarr; Output Correlation (Pearson)</h3><div class="kv" style="grid-template-columns:100px 1fr; margin-bottom:8px;">` +
+        `<span>r(k, x):</span><span class="mono">${f3(S.corr.kx)}</span><span>r(k, y):</span><span class="mono">${f3(S.corr.ky)}</span>` +
+        `<span>r(x, y):</span><span class="mono">${f3(S.corr.xy)}</span><span>r(x<sub>k</sub>, x<sub>k+1</sub>):</span><span class="mono">${f3(S.corr.lag)}</span></div>` +
+        `<div class="note">Values near 0 indicate no linear dependence. Note: $r(k,x) = 0$ due to symmetry $x(Q_k) = x(Q_{n-k})$, not because of "randomness". $Q_{k+1} = Q_k + G$ maintains exact algebraic relation.</div></div>`;
+
+      h += `<div class="stat-card"><h3>Avalanche Effect (Flipping 1 Bit of k)</h3><div class="table-container" style="margin:6px 0;"><table class="styled-table"><thead><tr><th>Mapping</th><th>Output Bits Flipped</th></tr></thead><tbody>` +
+        `<tr><td>Identity $k \mapsto k$</td><td class="mono">${(S.aval.identity * 100).toFixed(1)}%</td></tr>` +
+        `<tr><td>Non-cryptographic mixer (Reference)</td><td class="mono">${(S.aval.mixer * 100).toFixed(1)}%</td></tr>` +
+        `<tr><td>X-coordinate of $kG$</td><td class="mono">${(S.aval.eccX * 100).toFixed(1)}%</td></tr>` +
+        `<tr><td>(X, Y) coordinates of $kG$</td><td class="mono">${(S.aval.eccXY * 100).toFixed(1)}%</td></tr></tbody></table></div>` +
+        `<div class="note">${S.aval.trials} random trials. A cryptographic hash targets ~50%. For $kG$, avalanche is not a design requirement.</div></div>`;
+
+      h += `<div class="stat-card"><h3>Scatter Lattice of Points (x, y) &in; Q<sub>k</sub></h3><div style="display:flex; justify-content:center; margin:8px 0;"><canvas id="cvScatter" width="340" height="340"></canvas></div><div class="note">Color = key index $k$. Reflection symmetry $y \leftrightarrow p - y$ is visually apparent.</div></div>`;
+
+      h += `<div class="stat-card"><h3>Brute-Force Inversion Benchmark (ECDLP)</h3><div class="kv" style="grid-template-columns:120px 1fr; margin-bottom:8px;">` +
+        `<span>Random Secret:</span><span class="mono">k = ${S.brute.secret}, Q = ${fmt(S.brute.target)}</span>` +
+        `<span>Found After:</span><span class="mono"><strong>${S.brute.found}</strong> point additions (${S.brute.ms} ms)</span></div>` +
+        `<div class="note">With $n \approx ${S.n}$ brute force is instantaneous. For production secp256k1, $n \approx 2^{256}$: the fastest generic attacks (Pollard's rho) require $2^{128}$ operations (~billions of years).</div></div>`;
+
       h += `</div>`;
       out.innerHTML = h;
+
       const sc = $('cvScatter').getContext('2d'), W = 340, r = S.p <= 17 ? 6 : (S.p <= 1009 ? 2.5 : 1.6);
       sc.fillStyle = css('--card'); sc.fillRect(0, 0, W, W);
       sc.strokeStyle = css('--grid'); sc.strokeRect(.5, .5, W - 1, W - 1);
@@ -707,13 +1427,18 @@
       }
     }
 
-    $('selP').onchange = () => { populateG(); compute(); $('statsOut').innerHTML = ''; };
-    $('selG').onchange = () => { compute(); $('statsOut').innerHTML = ''; };
-    $('btnCompute').onclick = compute;
-    $('inK').addEventListener('keydown', e => { if (e.key === 'Enter') compute(); });
-    $('btnStats').onclick = runStats;
-    populateG(); compute();
+    // Initialize Event Listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      initThemeToggle();
+      $('selP').onchange = () => { populateG(); compute(); $('statsOut').innerHTML = ''; };
+      $('selG').onchange = () => { compute(); $('statsOut').innerHTML = ''; };
+      $('btnCompute').onclick = compute;
+      $('inK').addEventListener('keydown', e => { if (e.key === 'Enter') compute(); });
+      $('btnStats').onclick = runStats;
+      
+      populateG();
+      compute();
+    });
   </script>
 </body>
-
 </html>

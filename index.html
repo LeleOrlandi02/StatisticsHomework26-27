@@ -102,7 +102,7 @@
             <span class="metric-label">Pending / Upcoming</span>
             <span class="metric-icon" style="background: var(--status-pending-bg); color: var(--status-pending-text);">⏳</span>
           </div>
-          <div class="metric-val" id="statPending">6</div>
+          <div class="metric-val" id="statPending">0</div>
           <div class="metric-sub">Scheduled assignments</div>
         </div>
 
@@ -111,18 +111,18 @@
             <span class="metric-label">Total Curriculum</span>
             <span class="metric-icon" style="background: rgba(99, 102, 241, 0.12); color: var(--accent-primary);">📚</span>
           </div>
-          <div class="metric-val" id="statTotal">8</div>
-          <div class="metric-sub">Planned homework modules</div>
+          <div class="metric-val" id="statTotal">2</div>
+          <div class="metric-sub">Active homework modules</div>
         </div>
 
         <!-- Overall Progress Bar Card -->
         <div class="overall-progress-card">
           <div class="progress-header">
             <span>Curriculum Progress</span>
-            <span id="statPercent" class="mono">25%</span>
+            <span id="statPercent" class="mono">100%</span>
           </div>
-          <div class="progress-track" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
-            <div class="progress-fill" id="progressFill" style="width: 25%;"></div>
+          <div class="progress-track" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-fill" id="progressFill" style="width: 100%;"></div>
           </div>
         </div>
       </div>
@@ -132,13 +132,10 @@
     <section class="controls-section" aria-label="Filters and Search">
       <div class="filter-pills" role="tablist">
         <button class="filter-btn active" data-filter="all" role="tab" aria-selected="true">
-          All Assignments <span class="filter-count" id="countAll">8</span>
+          All Assignments <span class="filter-count" id="countAll">2</span>
         </button>
         <button class="filter-btn" data-filter="completed" role="tab" aria-selected="false">
           Completed <span class="filter-count" id="countCompleted">2</span>
-        </button>
-        <button class="filter-btn" data-filter="upcoming" role="tab" aria-selected="false">
-          Upcoming / To Do <span class="filter-count" id="countUpcoming">6</span>
         </button>
       </div>
 
@@ -246,210 +243,6 @@
         </div>
       </article>
 
-      <!-- ==========================================
-           HOMEWORK 3 (UPCOMING)
-           ========================================== -->
-      <article class="hw-card" data-status="upcoming">
-        <div class="hw-card-top">
-          <span class="hw-number-badge">HMWK 03</span>
-          <span class="hw-status-badge status-pending">Upcoming</span>
-        </div>
-
-        <h2 class="hw-card-title">Poisson Point Processes & Waiting Times</h2>
-        <h3 class="hw-card-subtitle">Inter-arrival Distributions &bull; Memoryless Property &bull; Queuing</h3>
-        
-        <p class="hw-card-desc">
-          Continuous-time event arrival generation according to a homogeneous Poisson process. Empirical test of exponential waiting times, memorylessness verification, and sample dispersion indices.
-        </p>
-
-        <div class="hw-tags">
-          <span class="hw-tag">Poisson Process</span>
-          <span class="hw-tag">Exponential Dist</span>
-          <span class="hw-tag">Waiting Times</span>
-          <span class="hw-tag">Queueing</span>
-        </div>
-
-        <div class="hw-card-footer">
-          <span class="btn-disabled-action">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <span>Planned</span>
-          </span>
-        </div>
-      </article>
-
-      <!-- ==========================================
-           HOMEWORK 4 (UPCOMING)
-           ========================================== -->
-      <article class="hw-card" data-status="upcoming">
-        <div class="hw-card-top">
-          <span class="hw-number-badge">HMWK 04</span>
-          <span class="hw-status-badge status-pending">Upcoming</span>
-        </div>
-
-        <h2 class="hw-card-title">Central Limit Theorem & Normality Testing</h2>
-        <h3 class="hw-card-subtitle">Berry-Esseen Bounds &bull; Sample Sums &bull; Q-Q Diagnostic Plots</h3>
-        
-        <p class="hw-card-desc">
-          Empirical verification of the Central Limit Theorem across non-Gaussian distributions (Uniform, Exponential, Cauchy). Standardized sample sums, empirical density comparisons, and quantile-quantile (Q-Q) diagnostics.
-        </p>
-
-        <div class="hw-tags">
-          <span class="hw-tag">Central Limit Theorem</span>
-          <span class="hw-tag">Normality Test</span>
-          <span class="hw-tag">Q-Q Plots</span>
-          <span class="hw-tag">Convergence</span>
-        </div>
-
-        <div class="hw-card-footer">
-          <span class="btn-disabled-action">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <span>Planned</span>
-          </span>
-        </div>
-      </article>
-
-      <!-- ==========================================
-           HOMEWORK 5 (UPCOMING)
-           ========================================== -->
-      <article class="hw-card" data-status="upcoming">
-        <div class="hw-card-top">
-          <span class="hw-number-badge">HMWK 05</span>
-          <span class="hw-status-badge status-pending">Upcoming</span>
-        </div>
-
-        <h2 class="hw-card-title">Discrete-Time Markov Chains & Ergodicity</h2>
-        <h3 class="hw-card-subtitle">Transition Matrices &bull; Stationary Distributions &bull; Mixing Times</h3>
-        
-        <p class="hw-card-desc">
-          Construction of finite-state Markov transition matrices, calculation of stationary distributions via power iteration and eigensolvers, and measurement of total variation distance mixing times.
-        </p>
-
-        <div class="hw-tags">
-          <span class="hw-tag">Markov Chains</span>
-          <span class="hw-tag">Transition Matrix</span>
-          <span class="hw-tag">Ergodicity</span>
-          <span class="hw-tag">PageRank</span>
-        </div>
-
-        <div class="hw-card-footer">
-          <span class="btn-disabled-action">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <span>Planned</span>
-          </span>
-        </div>
-      </article>
-
-      <!-- ==========================================
-           HOMEWORK 6 (UPCOMING)
-           ========================================== -->
-      <article class="hw-card" data-status="upcoming">
-        <div class="hw-card-top">
-          <span class="hw-number-badge">HMWK 06</span>
-          <span class="hw-status-badge status-pending">Upcoming</span>
-        </div>
-
-        <h2 class="hw-card-title">Monte Carlo Methods & Variance Reduction</h2>
-        <h3 class="hw-card-subtitle">Numerical Integration &bull; Antithetic Variates &bull; Importance Sampling</h3>
-        
-        <p class="hw-card-desc">
-          High-dimensional numerical integration using Monte Carlo methods. Comparative study between naive sampling, antithetic variates, control variates, and importance sampling for variance reduction.
-        </p>
-
-        <div class="hw-tags">
-          <span class="hw-tag">Monte Carlo</span>
-          <span class="hw-tag">Variance Reduction</span>
-          <span class="hw-tag">Importance Sampling</span>
-          <span class="hw-tag">Estimation</span>
-        </div>
-
-        <div class="hw-card-footer">
-          <span class="btn-disabled-action">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <span>Planned</span>
-          </span>
-        </div>
-      </article>
-
-      <!-- ==========================================
-           HOMEWORK 7 (UPCOMING)
-           ========================================== -->
-      <article class="hw-card" data-status="upcoming">
-        <div class="hw-card-top">
-          <span class="hw-number-badge">HMWK 07</span>
-          <span class="hw-status-badge status-pending">Upcoming</span>
-        </div>
-
-        <h2 class="hw-card-title">Statistical Hypothesis Testing & Empirical p-values</h2>
-        <h3 class="hw-card-subtitle">Type I/II Errors &bull; Power Curves &bull; Permutation Tests</h3>
-        
-        <p class="hw-card-desc">
-          Simulation of null and alternative hypothesis distributions, verifying p-value uniformity under the null, power curve sensitivity analysis, and non-parametric permutation test algorithms.
-        </p>
-
-        <div class="hw-tags">
-          <span class="hw-tag">Hypothesis Testing</span>
-          <span class="hw-tag">p-value Uniformity</span>
-          <span class="hw-tag">Statistical Power</span>
-          <span class="hw-tag">Permutation Tests</span>
-        </div>
-
-        <div class="hw-card-footer">
-          <span class="btn-disabled-action">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <span>Planned</span>
-          </span>
-        </div>
-      </article>
-
-      <!-- ==========================================
-           HOMEWORK 8 (UPCOMING)
-           ========================================== -->
-      <article class="hw-card" data-status="upcoming">
-        <div class="hw-card-top">
-          <span class="hw-number-badge">HMWK 08</span>
-          <span class="hw-status-badge status-pending">Upcoming</span>
-        </div>
-
-        <h2 class="hw-card-title">Shannon Entropy & Kullback-Leibler Divergence</h2>
-        <h3 class="hw-card-subtitle">Information Measures &bull; Relative Entropy &bull; Compression Bounds</h3>
-        
-        <p class="hw-card-desc">
-          Computing empirical Shannon entropy, joint and conditional entropy, mutual information, and Kullback-Leibler (KL) divergence to evaluate statistical distance between distributions.
-        </p>
-
-        <div class="hw-tags">
-          <span class="hw-tag">Shannon Entropy</span>
-          <span class="hw-tag">KL-Divergence</span>
-          <span class="hw-tag">Mutual Info</span>
-          <span class="hw-tag">Information Theory</span>
-        </div>
-
-        <div class="hw-card-footer">
-          <span class="btn-disabled-action">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <span>Planned</span>
-          </span>
-        </div>
-      </article>
-
       <!-- Empty State for Live Search -->
       <div class="empty-state" id="emptyState">
         <div class="empty-icon">🔍</div>
@@ -457,28 +250,6 @@
         <p class="empty-desc">Try clearing your search term or selecting another filter tab.</p>
       </div>
 
-    </section>
-
-    <!-- Quick Integration Guide for Future Homeworks -->
-    <section class="quickstart-guide" aria-label="Quick Guide">
-      <div class="quickstart-header">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="12" y1="16" x2="12" y2="12"></line>
-          <line x1="12" y1="8" x2="12.01" y2="8"></line>
-        </svg>
-        <h3>How to link your next homework when completed</h3>
-      </div>
-      <p class="quickstart-desc">
-        When you finish a new homework file (e.g. <code>homework2.html</code>), simply update that card in <code>index.html</code>:
-      </p>
-      <div class="code-snippet">
-&lt;!-- Change card class to completed and add the link: --&gt;<br>
-&lt;article class="hw-card completed" data-status="completed"&gt;<br>
-&nbsp;&nbsp;...<br>
-&nbsp;&nbsp;&lt;a href="homework2.html" class="btn-primary-action"&gt;Open Interactive Homework &rarr;&lt;/a&gt;<br>
-&lt;/article&gt;
-      </div>
     </section>
 
   </main>
