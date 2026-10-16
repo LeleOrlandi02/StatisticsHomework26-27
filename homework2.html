@@ -10,6 +10,32 @@
   <!-- Global Design System -->
   <link rel="stylesheet" href="style.css">
 
+  <!-- MathJax Configuration for LaTeX compilation ($ ... $ and $$ ... $$) -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true,
+        processEnvironments: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      },
+      chtml: {
+        fontURL: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2'
+      },
+      startup: {
+        pageReady: () => {
+          return MathJax.startup.defaultPageReady().then(() => {
+            console.log('MathJax ready in homework2');
+          });
+        }
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
   <style>
     /* Dedicated Custom Styles for Homework 2 */
     .hw2-container {
@@ -1129,7 +1155,7 @@
         <!-- EIP-55 Inspector Grid -->
         <div style="margin-bottom: 8px; font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between;">
           <span>Nibble-by-Nibble Evaluation (hover over cells for rule inspection):</span>
-          <span><span style="color: var(--accent-primary); font-weight: 700;">■</span> Uppercase ($h_i \ge 8$) &nbsp; <span style="color: var(--text-main); font-weight: 700;">■</span> Lowercase ($h_i < 8$)</span>
+          <span><span style="color: var(--accent-primary); font-weight: 700;">■</span> Uppercase ($h_i \ge 8$) &nbsp; <span style="color: var(--text-main); font-weight: 700;">■</span> Lowercase ($h_i \lt 8$)</span>
         </div>
         <div class="eip55-grid" id="eip55InspectorGrid"></div>
 

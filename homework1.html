@@ -10,6 +10,32 @@
   <!-- Global Design System -->
   <link rel="stylesheet" href="style.css">
 
+  <!-- MathJax Configuration for LaTeX compilation ($ ... $ and $$ ... $$) -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true,
+        processEnvironments: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      },
+      chtml: {
+        fontURL: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2'
+      },
+      startup: {
+        pageReady: () => {
+          return MathJax.startup.defaultPageReady().then(() => {
+            console.log('MathJax ready in homework1');
+          });
+        }
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
   <style>
     /* Dedicated Custom Styles for Homework 1 - Harmonized with Homework 2 Design System */
     :root {
@@ -919,7 +945,7 @@
             </div>
             <ul>
               <li><strong>Strict Avalanche Criterion (SAC):</strong> Flipping a single input bit changes ~50% of output bits independently. For $kG$, this is neither guaranteed nor required: consecutive keys $k$ and $k+1$ yield points differing by $+G$.</li>
-              <li><strong>Pseudorandomness on Bit Strings:</strong> Hash outputs must be indistinguishable from random bits. By contrast, curve points have strict algebraic constraints: $x < p$, only ~half of $x$ admit points on the curve, and $y^2 = x^3 + 7 \pmod p$.</li>
+              <li><strong>Pseudorandomness on Bit Strings:</strong> Hash outputs must be indistinguishable from random bits. By contrast, curve points have strict algebraic constraints: $x \lt p$, only ~half of $x$ admit points on the curve, and $y^2 = x^3 + 7 \pmod p$.</li>
               <li><strong>Compression & Arbitrary Input:</strong> A hash function compresses variable-length messages into a fixed digest ($256$ bits) with preimage and second-preimage resistance. $kG$ does not compress.</li>
               <li><strong>Absence of Homomorphisms:</strong> A good hash must have no linear or algebraic relations ($H(a \oplus b) \ne H(a) \oplus H(b)$). For $kG$, group structure is fundamental.</li>
             </ul>
@@ -1391,7 +1417,7 @@
         `<div class="note">χ² = ${S.cy.toFixed(1)}, p ≈ ${pv(S.py)}. Points Q and −Q share x and have opposite y ($y \leftrightarrow p-y$), giving symmetric distribution around $p/2$.</div></div>`;
 
       h += `<div class="stat-card"><h3>Bits of X: Fraction of 1s (Bit 0 = LSB)</h3>${bars(S.bitsX, { h: 90, expected: 0.5, l0: 'bit 0', l1: 'bit ' + (S.L - 1), title: 'bit frequency of x' }).replace(/<svg /, '<svg style="max-width:100%" ')}` +
-        `<div class="note">Ideal is 0.5. High bits are skewed because $x < p$ and $p$ is not a power of 2.</div></div>`;
+        `<div class="note">Ideal is 0.5. High bits are skewed because $x \lt p$ and $p$ is not a power of 2.</div></div>`;
 
       h += `<div class="stat-card"><h3>Bits of Y: Fraction of 1s</h3>${bars(S.bitsY, { h: 90, expected: 0.5, l0: 'bit 0', l1: 'bit ' + (S.L - 1), title: 'bit frequency of y' })}` +
         `<div class="note">Values: ${S.bitsY.map(v => v.toFixed(2)).join(', ')}</div></div>`;
@@ -1417,6 +1443,14 @@
 
       h += `</div>`;
       out.innerHTML = h;
+
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([out]).catch(err => console.warn('MathJax error:', err));
+      } else if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+        window.MathJax.startup.promise.then(() => {
+          if (window.MathJax.typesetPromise) window.MathJax.typesetPromise([out]);
+        });
+      }
 
       const sc = $('cvScatter').getContext('2d'), W = 340, r = S.p <= 17 ? 6 : (S.p <= 1009 ? 2.5 : 1.6);
       sc.fillStyle = css('--card'); sc.fillRect(0, 0, W, W);

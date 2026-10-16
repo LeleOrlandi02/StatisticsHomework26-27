@@ -977,3 +977,34 @@ body {
   font-size: 0.88rem;
   color: var(--text-muted);
 }
+
+/* --- MathJax LaTeX Typography & System Integration --- */
+.MathJax,
+mjx-container {
+  color: inherit !important;
+  font-size: inherit;
+}
+
+mjx-container[jax="SVG"] {
+  outline: none;
+}
+
+mjx-container[jax="SVG"][display="true"] {
+  display: block;
+  text-align: center;
+  margin: 1rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+mjx-container[jax="SVG"]:not([display="true"]) {
+  display: inline-block;
+  vertical-align: -0.15ex;
+  margin: 0 0.1em;
+}
+
+mjx-container svg {
+  fill: currentColor;
+  stroke: currentColor;
+}
+
