@@ -93,7 +93,7 @@
             <span class="metric-label">Completed</span>
             <span class="metric-icon" style="background: var(--status-completed-bg); color: var(--status-completed-text);">✓</span>
           </div>
-          <div class="metric-val" id="statCompleted">2</div>
+          <div class="metric-val" id="statCompleted">3</div>
           <div class="metric-sub">Submitted & interactive</div>
         </div>
 
@@ -111,7 +111,7 @@
             <span class="metric-label">Total Curriculum</span>
             <span class="metric-icon" style="background: rgba(99, 102, 241, 0.12); color: var(--accent-primary);">📚</span>
           </div>
-          <div class="metric-val" id="statTotal">2</div>
+          <div class="metric-val" id="statTotal">3</div>
           <div class="metric-sub">Active homework modules</div>
         </div>
 
@@ -132,10 +132,10 @@
     <section class="controls-section" aria-label="Filters and Search">
       <div class="filter-pills" role="tablist">
         <button class="filter-btn active" data-filter="all" role="tab" aria-selected="true">
-          All Assignments <span class="filter-count" id="countAll">2</span>
+          All Assignments <span class="filter-count" id="countAll">3</span>
         </button>
         <button class="filter-btn" data-filter="completed" role="tab" aria-selected="false">
-          Completed <span class="filter-count" id="countCompleted">2</span>
+          Completed <span class="filter-count" id="countCompleted">3</span>
         </button>
       </div>
 
@@ -234,6 +234,54 @@
 
         <div class="hw-card-footer">
           <a href="homework2.html" class="btn-primary-action" id="openHw2">
+            <span>Open Interactive Homework</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+        </div>
+      </article>
+
+      <!-- ==========================================
+           HOMEWORK 3 (COMPLETED)
+           ========================================== -->
+      <article class="hw-card completed" data-status="completed">
+        <div class="hw-card-top">
+          <span class="hw-number-badge">HMWK 03</span>
+          <span class="hw-status-badge status-done">
+            <span class="pulse-dot"></span> Completed
+          </span>
+        </div>
+
+        <h2 class="hw-card-title">Elliptic Curve vs. Caesar Cipher</h2>
+        <h3 class="hw-card-subtitle">secp256k1 Toy Scheme &bull; Caesar Cipher &bull; Statistical Cryptanalysis &bull; ECDLP Attacks</h3>
+        
+        <p class="hw-card-desc">
+          Dual comparative analysis and interactive cryptanalytic laboratory contrasting symmetric monoalphabetic substitution (Caesar cipher) against asymmetric discrete-logarithm cryptography (toy secp256k1 scheme). Features live Chi-Squared frequency attacks, length benchmarking, Monte Carlo simulations, and ECDLP private-key recovery.
+        </p>
+
+        <ul class="hw-highlights">
+          <li>Live dual encryption/decryption: Ephemeral ECDH stream mask vs. classical $\mathbb{Z}_{26}$ modular shift</li>
+          <li>Empirical statistical diagnostics: Letter frequency histograms, Index of Coincidence & Shannon Entropy</li>
+          <li>Statistical cryptanalysis: Chi-Squared ($\chi^2$) goodness-of-fit with 26-shift rank table & bar charts</li>
+          <li>Length effect & Monte Carlo: Accuracy convergence vs. text length ($N = 5 \dots 500$), Bigrams vs. Unigrams</li>
+          <li>Restricted-space ECDLP attack: Brute-force point accumulation & BSGS inverting $Q = dG$ in milliseconds</li>
+        </ul>
+
+        <div class="hw-tags">
+          <span class="hw-tag">secp256k1</span>
+          <span class="hw-tag">Caesar Cipher</span>
+          <span class="hw-tag">Statistical Cryptanalysis</span>
+          <span class="hw-tag">Chi-Squared Test</span>
+          <span class="hw-tag">N-Gram Scoring</span>
+          <span class="hw-tag">Monte Carlo</span>
+          <span class="hw-tag">ECDLP Attack</span>
+          <span class="hw-tag">Baby-Step Giant-Step</span>
+        </div>
+
+        <div class="hw-card-footer">
+          <a href="homework3.html" class="btn-primary-action" id="openHw3">
             <span>Open Interactive Homework</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="5" y1="12" x2="19" y2="12"></line>
