@@ -637,6 +637,298 @@
       color: var(--text-main);
       line-height: 1.6;
     }
+
+    /* ==========================================================================
+       UHD Interactive Point 5: Cybersecurity Operational Principles
+       ========================================================================== */
+    .uhd-theory-card {
+      position: relative;
+      background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
+                  radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+                  var(--bg-card);
+      border: 1px solid var(--border-accent);
+      border-radius: var(--radius-xl);
+      padding: 30px;
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 0 20px rgba(99, 102, 241, 0.08);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .uhd-theory-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .uhd-title-group h3 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 6px 0;
+      letter-spacing: -0.01em;
+    }
+
+    .uhd-title-group p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin: 0;
+      max-width: 760px;
+      line-height: 1.5;
+    }
+
+    .uhd-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-uhd-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: var(--transition-fast);
+      user-select: none;
+    }
+
+    .btn-uhd-toggle:hover {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: #ffffff;
+      box-shadow: 0 0 14px var(--accent-glow);
+    }
+
+    .uhd-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+      gap: 20px;
+    }
+
+    @media (max-width: 680px) {
+      .uhd-grid {
+        grid-template-columns: 1fr;
+      }
+      .uhd-theory-card {
+        padding: 20px 16px;
+      }
+    }
+
+    .uhd-card {
+      position: relative;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      outline: none;
+      user-select: none;
+    }
+
+    .uhd-card:hover, .uhd-card:focus-visible {
+      background: var(--bg-card);
+      border-color: var(--accent-secondary);
+      box-shadow: 0 12px 28px -4px rgba(99, 102, 241, 0.22), 0 0 16px rgba(99, 102, 241, 0.16);
+      transform: translateY(-3px);
+    }
+
+    .uhd-card:focus-visible {
+      box-shadow: 0 0 0 3px var(--accent-glow), 0 12px 28px -4px rgba(99, 102, 241, 0.22);
+    }
+
+    .uhd-card.is-expanded {
+      background: var(--bg-card);
+      border-color: var(--accent-primary);
+      box-shadow: 0 16px 36px -4px rgba(99, 102, 241, 0.26), 0 0 24px rgba(99, 102, 241, 0.2);
+    }
+
+    .uhd-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .uhd-card-tag {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .uhd-card-tag.lln {
+      background: rgba(16, 185, 129, 0.14);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .uhd-card-tag.linear {
+      background: rgba(59, 130, 246, 0.14);
+      color: #3b82f6;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .uhd-card-tag.drift {
+      background: rgba(245, 158, 11, 0.14);
+      color: #f59e0b;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .uhd-card-tag.tail {
+      background: rgba(239, 68, 68, 0.14);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .uhd-card-formula {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg-card);
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .uhd-card.is-expanded .uhd-card-formula {
+      border-color: var(--border-accent);
+      color: var(--accent-primary);
+    }
+
+    .uhd-card-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .uhd-card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: color var(--transition-fast);
+      margin: 0;
+    }
+
+    .uhd-card:hover .uhd-card-title,
+    .uhd-card.is-expanded .uhd-card-title {
+      color: var(--accent-primary);
+    }
+
+    .uhd-card-chevron {
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-full);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--text-muted);
+      transition: all 0.28s ease;
+    }
+
+    .uhd-card:hover .uhd-card-chevron {
+      color: var(--accent-primary);
+      border-color: var(--border-accent);
+      transform: scale(1.1);
+    }
+
+    .uhd-card.is-expanded .uhd-card-chevron {
+      transform: rotate(180deg);
+      background: var(--accent-primary);
+      color: #ffffff;
+      border-color: var(--accent-primary);
+    }
+
+    .uhd-card-teaser {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin: 0;
+      transition: color var(--transition-fast);
+    }
+
+    .uhd-card:hover .uhd-card-teaser {
+      color: var(--text-main);
+    }
+
+    .uhd-card-drawer {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, margin-top 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .uhd-card.is-expanded .uhd-card-drawer {
+      max-height: 900px;
+      opacity: 1;
+      margin-top: 6px;
+      padding-top: 16px;
+      border-top: 1px dashed var(--border-subtle);
+    }
+
+    .uhd-detail-block {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .uhd-detail-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .uhd-detail-block.math .uhd-detail-label { color: #8b5cf6; }
+    .uhd-detail-block.scenario .uhd-detail-label { color: #3b82f6; }
+    .uhd-detail-block.soc .uhd-detail-label { color: #10b981; }
+
+    .uhd-detail-content {
+      color: var(--text-main);
+      margin: 0;
+    }
   </style>
 </head>
 <body>
@@ -1244,38 +1536,276 @@
         </p>
       </article>
 
-      <!-- Theory Card 5 -->
-      <article class="theory-card">
-        <h3>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
-            <line x1="7" y1="2" x2="7" y2="22"/>
-            <line x1="17" y1="2" x2="17" y2="22"/>
-            <line x1="2" y1="12" x2="22" y2="12"/>
-            <line x1="2" y1="7" x2="7" y2="7"/>
-            <line x1="2" y1="17" x2="7" y2="17"/>
-            <line x1="17" y1="17" x2="22" y2="17"/>
-            <line x1="17" y1="7" x2="22" y2="7"/>
-          </svg>
-          5. Cybersecurity Interpretation: System Scale $n$ and Adversary Fleet $m$
-        </h3>
-        <p>
-          Applying these stochastic laws to cybersecurity systems engineering yields four fundamental operational principles:
-        </p>
-        <ul style="margin: 0 0 12px 24px; font-size: 0.9rem; line-height: 1.6;">
-          <li>
-            <strong>Predictable Per-Layer Breach Density (LLN Effect):</strong> As system surface area or defense layers $n$ expand, the proportion of breached tiers per attacker deterministically converges to $p$ (Bernoulli model). Security operations centers (SOCs) can reliably forecast average incident volume and triage capacity requirements.
-          </li>
-          <li>
-            <strong>Total Enterprise Exposure ($S_n$ Scaling):</strong> Because the total breach score grows as $\mathbb{E}[S_n] = np$, expanding enterprise infrastructure without simultaneously lowering $p$ (hardening firewalls, zero-trust credentialing) leads to an unavoidable linear accumulation of total security incidents.
-          </li>
-          <li>
-            <strong>Zero-Sum Adversarial Drift vs Fluctuation (Rademacher Model):</strong> When automated active defense matches attacker efficacy ($P(+1) = P(-1) = 1/2$), the expected net penetration remains zero. However, Donsker's Invariance Principle dictates that the process converges to a Brownian motion with typical excursions scaling as $\pm \sqrt{n}$. In an enterprise with $n = 2000$ services, fluctuations routinely reach $\pm \sqrt{2000} \approx \pm 45$ tiers, providing persistent lateral movement windows for adversaries before defense counter-measures neutralize them.
-          </li>
-          <li>
-            <strong>The Attacker Fleet Multiplier ($m$ Effect):</strong> While individual penetration probabilities in the extreme tail $P(S_n \ge T)$ may appear comfortably low (e.g., $1\%$), coordinated botnets or multi-vector threat campaigns ($m = 500$) guarantee catastrophic compromise with probability $1 - (1 - 0.01)^{500} = 99.3\%$. Layered defense depth ($n$) must therefore be accompanied by automated IP reputation filtering and rate limiting to depress the effective fleet volume $m$.
-          </li>
-        </ul>
+      <!-- Theory Card 5 (UHD Interactive Cyber Framework) -->
+      <article class="theory-card uhd-theory-card" id="theoryCard5">
+        <div class="uhd-theory-header">
+          <div class="uhd-title-group">
+            <h3>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+                <line x1="7" y1="2" x2="7" y2="22"/>
+                <line x1="17" y1="2" x2="17" y2="22"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <line x1="2" y1="7" x2="7" y2="7"/>
+                <line x1="2" y1="17" x2="7" y2="17"/>
+                <line x1="17" y1="17" x2="22" y2="17"/>
+                <line x1="17" y1="7" x2="22" y2="7"/>
+              </svg>
+              5. Cybersecurity Interpretation: System Scale $n$ and Adversary Fleet $m$
+            </h3>
+            <p>
+              Bridging stochastic asymptotic theorems (LLN, Donsker's Brownian Invariance, and Extreme Value Theory) to enterprise threat modeling. <strong>Hover</strong> over each principle to highlight; <strong>click</strong> to expand technical derivations and actionable SOC countermeasures.
+            </p>
+          </div>
+
+          <div class="uhd-header-actions">
+            <button type="button" class="btn-uhd-toggle" id="btnUhdToggleAll" aria-label="Toggle All Sections">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="7 13 12 18 17 13"></polyline>
+                <polyline points="7 6 12 11 17 6"></polyline>
+              </svg>
+              <span>Expand All Sections</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="uhd-grid">
+          <!-- Mini-Section 1: LLN Per-Layer Breach Density -->
+          <div class="uhd-card" role="button" tabindex="0" aria-expanded="false" data-card="1">
+            <div class="uhd-card-top">
+              <span class="uhd-card-tag lln">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                LLN Convergence
+              </span>
+              <span class="uhd-card-formula">$\bar{X}_n \xrightarrow{P} p \quad [O(1/n)]$</span>
+            </div>
+
+            <div class="uhd-card-title-row">
+              <h4 class="uhd-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #10b981;">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                1. Predictable Per-Layer Breach Density
+              </h4>
+              <div class="uhd-card-chevron">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+
+            <p class="uhd-card-teaser">
+              As defense depth $n$ expands, per-layer attacker penetration deterministically condenses toward the baseline probability $p$.
+            </p>
+
+            <div class="uhd-card-drawer">
+              <div class="uhd-detail-block math">
+                <span class="uhd-detail-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                  Mathematical Mechanism & Limit
+                </span>
+                <p class="uhd-detail-content">
+                  By Kolmogorov's Strong Law of Large Numbers, the empirical average score $\bar{X}_n = \frac{S_n}{n}$ converges almost surely to the Bernoulli expectation: $\lim_{n \to \infty} P(|\bar{X}_n - p| \ge \varepsilon) = 0$. Variance collapses hyperbolically at rate $\text{Var}(\bar{X}_n) = \frac{p(1-p)}{n} = O(1/n) \to 0$.
+                </p>
+              </div>
+
+              <div class="uhd-detail-block scenario">
+                <span class="uhd-detail-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                  Enterprise Architecture Scenario
+                </span>
+                <p class="uhd-detail-content">
+                  In a zero-trust multi-tier architecture with $n = 500$ inspection layers (API gateways, mTLS handshakes, host firewalls), individual attacker trajectories lose random volatility. The fraction of traversed defenses stabilizes tightly around $p$, eliminating erratic anomaly spikes across the macro enterprise.
+                </p>
+              </div>
+
+              <div class="uhd-detail-block soc">
+                <span class="uhd-detail-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  Tactical SOC Countermeasure
+                </span>
+                <p class="uhd-detail-content">
+                  Security Operations Centers can reliably budget triage capacity and SIEM log ingestion rates: average incident flow is strictly bounded by $n \cdot p$. Chebyshev's bound guarantees that anomalous surges beyond $p \pm \varepsilon$ occur with frequency $\le \frac{\sigma^2}{n \varepsilon^2}$.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mini-Section 2: Linear Exposure Scaling -->
+          <div class="uhd-card" role="button" tabindex="0" aria-expanded="false" data-card="2">
+            <div class="uhd-card-top">
+              <span class="uhd-card-tag linear">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+                Exposure Scaling
+              </span>
+              <span class="uhd-card-formula">$\mathbb{E}[S_n] = np \quad [O(n)]$</span>
+            </div>
+
+            <div class="uhd-card-title-row">
+              <h4 class="uhd-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #3b82f6;">
+                  <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+                2. Total Enterprise Exposure Explosion
+              </h4>
+              <div class="uhd-card-chevron">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+
+            <p class="uhd-card-teaser">
+              Unscaled breach count grows linearly $\mathbb{E}[S_n] = np$. Expanding cloud footprint without lowering $p$ creates an unmanageable incident avalanche.
+            </p>
+
+            <div class="uhd-card-drawer">
+              <div class="uhd-detail-block math">
+                <span class="uhd-detail-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                  Mathematical Mechanism & Limit
+                </span>
+                <p class="uhd-detail-content">
+                  The unnormalized sum $S_n = \sum_{i=1}^n X_i$ accumulates raw variance $\text{Var}(S_n) = n \sigma^2 = n p (1-p)$. Standard deviation spreads as $\sigma \sqrt{n}$. Because variance diverges linearly ($O(n) \to \infty$), individual adversary penetration depths diverge without bound across an expanding attack surface.
+                </p>
+              </div>
+
+              <div class="uhd-detail-block scenario">
+                <span class="uhd-detail-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                  Enterprise Architecture Scenario
+                </span>
+                <p class="uhd-detail-content">
+                  An enterprise migrating from 100 on-prem servers to 2,000 Kubernetes microservices ($n = 2000$) multiplies total security incident count 20-fold if per-hop breach probability $p = 0.08$ remains constant: expected breaches rise from $8$ to $160$ per adversary campaign.
+                </p>
+              </div>
+
+              <div class="uhd-detail-block soc">
+                <span class="uhd-detail-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  Tactical SOC Countermeasure
+                </span>
+                <p class="uhd-detail-content">
+                  Infrastructure growth must be balanced by an aggressive sub-linear breach reduction: hardening policies must depress $p$ faster than $1/n$ (e.g. strict least-privilege RBAC, automated credential rotation). If $p(n) = O(1/n)$, expected total exposure $\mathbb{E}[S_n] = n \cdot p(n) = O(1)$ remains bounded regardless of fleet scale.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mini-Section 3: Zero-Sum Duel & Brownian Drift -->
+          <div class="uhd-card" role="button" tabindex="0" aria-expanded="false" data-card="3">
+            <div class="uhd-card-top">
+              <span class="uhd-card-tag drift">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Donsker Invariance
+              </span>
+              <span class="uhd-card-formula">$S_n/\sqrt{n} \Rightarrow W_t \quad [O(\sqrt{n})]$</span>
+            </div>
+
+            <div class="uhd-card-title-row">
+              <h4 class="uhd-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #f59e0b;">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+                3. Adversarial Parity & Brownian Lateral Excursions
+              </h4>
+              <div class="uhd-card-chevron">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+
+            <p class="uhd-card-teaser">
+              Under zero-sum active defense ($P(+1) = P(-1) = 1/2$), net drift is zero, yet natural Brownian excursions swing by $\pm \sqrt{n}$ tiers, opening lateral compromise windows.
+            </p>
+
+            <div class="uhd-card-drawer">
+              <div class="uhd-detail-block math">
+                <span class="uhd-detail-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                  Mathematical Mechanism & Limit
+                </span>
+                <p class="uhd-detail-content">
+                  In the Rademacher model, increments have zero mean ($\mu = 0$) and unit variance ($\sigma^2 = 1$). Donsker's Invariance Principle (Functional CLT) establishes that the continuous-time process $B_n(t) = \frac{S_{\lfloor nt \rfloor}}{\sqrt{n}}$ converges weakly to standard Brownian motion $W(t)$. The scale-invariant normalization $\frac{S_n}{\sqrt{n}} \xrightarrow{d} \mathcal{N}(0, 1)$ preserves variance identically at $1.00$.
+                </p>
+              </div>
+
+              <div class="uhd-detail-block scenario">
+                <span class="uhd-detail-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                  Enterprise Architecture Scenario
+                </span>
+                <p class="uhd-detail-content">
+                  Even when automated endpoint detection and response (EDR) blocks half of all exploits ($P = 0.5$), an enterprise with $n = 2500$ internal micro-segments experiences natural random fluctuations reaching $\pm 2\sqrt{2500} = \pm 100$ tiers. An adversary can ride this transient excursion into core data vaults before defensive measures neutralize them.
+                </p>
+              </div>
+
+              <div class="uhd-detail-block soc">
+                <span class="uhd-detail-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  Tactical SOC Countermeasure
+                </span>
+                <p class="uhd-detail-content">
+                  Do not rely on net-zero equilibrium. Deploy automated lateral movement velocity tripwires: if an asset's traversal increment rate exceeds the expected diffusion envelope $+2\sqrt{k}$, trigger instantaneous micro-quarantine of the session token, truncating the random walk before peak excursion.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mini-Section 4: The Fleet Multiplier -->
+          <div class="uhd-card" role="button" tabindex="0" aria-expanded="false" data-card="4">
+            <div class="uhd-card-top">
+              <span class="uhd-card-tag tail">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Extreme Value Tail
+              </span>
+              <span class="uhd-card-formula">$1 - (1-p_T)^m \to 100\%$</span>
+            </div>
+
+            <div class="uhd-card-title-row">
+              <h4 class="uhd-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #ef4444;">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                4. The Adversary Fleet Multiplier & Tail Collapse
+              </h4>
+              <div class="uhd-card-chevron">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+
+            <p class="uhd-card-teaser">
+              Cybersecurity is an extreme-value problem: defense must stop all $m$ attackers, while an adversary needs only a single trajectory exceeding threshold $T$.
+            </p>
+
+            <div class="uhd-card-drawer">
+              <div class="uhd-detail-block math">
+                <span class="uhd-detail-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                  Mathematical Mechanism & Limit
+                </span>
+                <p class="uhd-detail-content">
+                  Let single-attacker tail breach probability be $p_T = P(S_n \ge T) \approx 1 - \Phi\left(\frac{T - n\mu}{\sigma \sqrt{n}}\right)$. For $m$ independent adversaries, the maximum penetration $M_m = \max_{j=1\dots m} S_n^{(j)}$ governs security. The probability of enterprise breach is $P(M_m \ge T) = 1 - (1 - p_T)^m$. As fleet size $m \to \infty$, $P(\text{Breach}) \to 1$ exponentially fast.
+                </p>
+              </div>
+
+              <div class="uhd-detail-block scenario">
+                <span class="uhd-detail-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                  Enterprise Architecture Scenario
+                </span>
+                <p class="uhd-detail-content">
+                  Suppose a perimeter wall sets threshold $T$ such that single-attacker breach odds are merely $0.5\%$ ($p_T = 0.005$). Against a coordinated botnet or distributed denial-of-service swarm of $m = 600$ attacker agents, enterprise breach probability becomes $1 - (1 - 0.005)^{600} = 1 - 0.049 = 95.1\%$. The defense fails with near certainty!
+                </p>
+              </div>
+
+              <div class="uhd-detail-block soc">
+                <span class="uhd-detail-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  Tactical SOC Countermeasure
+                </span>
+                <p class="uhd-detail-content">
+                  Because raising the threshold $T$ only increases protection linearly or square-root, while adversary volume $m$ drives failure exponentially, edge ingress defenses must focus on <em>fleet deflation</em>: automated IP reputation blocking, proof-of-work CAPTCHAs, and API rate-limiting to depress $m$ before adversaries touch interior systems.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </article>
 
     </section>
@@ -1737,6 +2267,57 @@
 
       // Initial Simulation Run
       updateSimulation();
+
+      // Initialize UHD Point 5 Interactive Mini-Sections
+      initPoint5Interactive();
+    }
+
+    function initPoint5Interactive() {
+      const cards = document.querySelectorAll('.uhd-card');
+      const btnToggleAll = document.getElementById('btnUhdToggleAll');
+      if (!cards.length) return;
+
+      function toggleCard(card, forceState) {
+        const isExpanded = forceState !== undefined ? forceState : !card.classList.contains('is-expanded');
+        if (isExpanded) {
+          card.classList.add('is-expanded');
+          card.setAttribute('aria-expanded', 'true');
+        } else {
+          card.classList.remove('is-expanded');
+          card.setAttribute('aria-expanded', 'false');
+        }
+        if (window.MathJax && isExpanded) {
+          const drawer = card.querySelector('.uhd-card-drawer');
+          if (drawer) {
+            window.MathJax.typesetPromise?.([drawer]).catch(() => {});
+          }
+        }
+      }
+
+      cards.forEach(card => {
+        card.addEventListener('click', (e) => {
+          if (window.getSelection && window.getSelection().toString().length > 0) return;
+          toggleCard(card);
+        });
+
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleCard(card);
+          }
+        });
+      });
+
+      if (btnToggleAll) {
+        btnToggleAll.addEventListener('click', () => {
+          const anyCollapsed = Array.from(cards).some(c => !c.classList.contains('is-expanded'));
+          cards.forEach(c => toggleCard(c, anyCollapsed));
+          const span = btnToggleAll.querySelector('span');
+          if (span) {
+            span.textContent = anyCollapsed ? "Collapse All Sections" : "Expand All Sections";
+          }
+        });
+      }
     }
   </script>
 </body>

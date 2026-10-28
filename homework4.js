@@ -165,7 +165,7 @@
       const dMinus = Math.abs(theoreticalCdf - empiricalCdfPrev);
 
       if (dPlus > dMax) dMax = dPlus;
-      if (dMinus > dMax) dMinus = dMax;
+      if (dMinus > dMax) dMax = dMinus;
     }
 
     // Asymptotic p-value approximation for Kolmogorov distribution
