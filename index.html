@@ -93,7 +93,7 @@
             <span class="metric-label">Completed</span>
             <span class="metric-icon" style="background: var(--status-completed-bg); color: var(--status-completed-text);">✓</span>
           </div>
-          <div class="metric-val" id="statCompleted">4</div>
+          <div class="metric-val" id="statCompleted">5</div>
           <div class="metric-sub">Submitted & interactive</div>
         </div>
 
@@ -111,7 +111,7 @@
             <span class="metric-label">Total Curriculum</span>
             <span class="metric-icon" style="background: rgba(99, 102, 241, 0.12); color: var(--accent-primary);">📚</span>
           </div>
-          <div class="metric-val" id="statTotal">4</div>
+          <div class="metric-val" id="statTotal">5</div>
           <div class="metric-sub">Active homework modules</div>
         </div>
 
@@ -132,10 +132,10 @@
     <section class="controls-section" aria-label="Filters and Search">
       <div class="filter-pills" role="tablist">
         <button class="filter-btn active" data-filter="all" role="tab" aria-selected="true">
-          All Assignments <span class="filter-count" id="countAll">4</span>
+          All Assignments <span class="filter-count" id="countAll">5</span>
         </button>
         <button class="filter-btn" data-filter="completed" role="tab" aria-selected="false">
-          Completed <span class="filter-count" id="countCompleted">4</span>
+          Completed <span class="filter-count" id="countCompleted">5</span>
         </button>
       </div>
 
@@ -330,6 +330,54 @@
 
         <div class="hw-card-footer">
           <a href="homework4.html" class="btn-primary-action" id="openHw4">
+            <span>Open Interactive Homework</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+        </div>
+      </article>
+
+      <!-- ==========================================
+           HOMEWORK 5 (COMPLETED)
+           ========================================== -->
+      <article class="hw-card completed" data-status="completed">
+        <div class="hw-card-top">
+          <span class="hw-number-badge">HMWK 05</span>
+          <span class="hw-status-badge status-done">
+            <span class="pulse-dot"></span> Completed
+          </span>
+        </div>
+
+        <h2 class="hw-card-title">Welford's Recurrence Formulas & Sampling Distributions</h2>
+        <h3 class="hw-card-subtitle">Knuth & Welford Recurrence &bull; 3-Line Streaming Engine &bull; Bessel's Correction &bull; Variance Decay O(1/n)</h3>
+        
+        <p class="hw-card-desc">
+          Mathematical derivation of Knuth's mean and Welford's sum-of-squares (SS) single-pass recurrence formulas avoiding floating-point catastrophic cancellation. Adversarial penetration laboratory across n systems and m hackers on [0, 10] examining estimator unbiasedness, inferential utility, and asymptotic O(1/n) variance collapse.
+        </p>
+
+        <ul class="hw-highlights">
+          <li>Algebraic step-by-step derivation: Knuth's running mean and Welford's M2 product formula</li>
+          <li>Minimalist 3-line streaming algorithm & Catastrophic Cancellation Duel against naive formula</li>
+          <li>Adversarial multi-hacker penetration laboratory across n systems with 6 customizable score distributions</li>
+          <li>Mathematical proof of Bessel's correction n/(n-1) compensating for sample variance downward bias</li>
+          <li>Asymptotic variability scaling: Var(X_bar) = sigma^2/n and Var(S^2) ~ O(1/n) decay curves</li>
+        </ul>
+
+        <div class="hw-tags">
+          <span class="hw-tag">Welford Algorithm</span>
+          <span class="hw-tag">Knuth Recurrence</span>
+          <span class="hw-tag">Sampling Mean</span>
+          <span class="hw-tag">Sampling Variance</span>
+          <span class="hw-tag">Bessel Correction</span>
+          <span class="hw-tag">Catastrophic Cancellation</span>
+          <span class="hw-tag">Inferential Statistics</span>
+          <span class="hw-tag">Asymptotic Decay</span>
+        </div>
+
+        <div class="hw-card-footer">
+          <a href="homework5.html" class="btn-primary-action" id="openHw5">
             <span>Open Interactive Homework</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="5" y1="12" x2="19" y2="12"></line>
