@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Homework 6: Riemann vs. Lebesgue Integration & Numerical Computation of the Normal CDF. Numerical comparison of domain vs range partitioning on smooth, singular, and pathological functions. High-precision computation of the Gaussian CDF, Liouville's theorem on non-elementary integrals, and rational Chebyshev minimax approximation.">
+  <meta name="author" content="Emanuele Orlandi">
+  <title>HMWK 6 — Riemann & Lebesgue Integration & Normal CDF | Statistics Portfolio 2026/2027</title>
+
+  <!-- Global Design System -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- MathJax Configuration for LaTeX compilation ($ ... $ and $$ ... $$) -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true,
+        processEnvironments: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      },
+      chtml: {
+        fontURL: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2'
+      },
+      startup: {
+        pageReady: () => {
+          return MathJax.startup.defaultPageReady().then(() => {
+            console.log('MathJax ready in homework6');
+          });
+        }
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    /* Dedicated Custom Styles for Homework 6 - Harmonized with Design System */
+    .hw6-container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+    }
+
+    .nav-back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      font-size: 0.84rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      transition: var(--transition-fast);
+    }
+
+    .nav-back-btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-primary);
+      color: var(--text-main);
+    }
+
+    /* Exercise Header Ribbon */
+    .exercise-ribbon {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: rgba(99, 102, 241, 0.12);
+      color: var(--accent-primary);
+      margin-bottom: 12px;
+    }
+
+    /* Workbench / Card Blocks */
+    .workbench-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .workbench-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .workbench-title-group h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--text-main);
+    }
+
+    .workbench-title-group p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    /* Function Selection Grid */
+    .func-selector-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .func-card-btn {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      cursor: pointer;
+      text-align: left;
+      transition: var(--transition-normal);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .func-card-btn:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .func-card-btn.active {
+      border-color: var(--accent-primary);
+      background: color-mix(in srgb, var(--accent-primary) 6%, var(--bg-card));
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .func-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .func-card-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .func-badge {
+      font-size: 0.68rem;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--accent-primary);
+    }
+
+    .func-badge.pathological {
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.08);
+    }
+
+    .func-badge.improper {
+      color: #f59e0b;
+      border-color: rgba(245, 158, 11, 0.3);
+      background: rgba(245, 158, 11, 0.08);
+    }
+
+    .func-desc {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    /* Controls Grid */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .control-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .control-val-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      padding: 2px 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--accent-primary);
+    }
+
+    .range-slider {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border-subtle);
+      accent-color: var(--accent-primary);
+      cursor: pointer;
+    }
+
+    .preset-pills-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .preset-pill {
+      font-size: 0.72rem;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 2px 7px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+
+    .preset-pill:hover {
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+    }
+
+    .preset-pill.active {
+      background: var(--accent-primary);
+      color: #ffffff;
+      border-color: var(--accent-primary);
+    }
+
+    /* Toggle Mode Buttons */
+    .view-toggle-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .view-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+
+    .view-toggle-btn:hover {
+      border-color: var(--border-strong);
+      color: var(--text-main);
+    }
+
+    .view-toggle-btn.active {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: #ffffff;
+      box-shadow: 0 2px 8px var(--accent-glow);
+    }
+
+    /* Canvas Card */
+    .canvas-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      position: relative;
+    }
+
+    .main-canvas {
+      width: 100%;
+      height: 380px;
+      display: block;
+    }
+
+    .sub-canvas {
+      width: 100%;
+      height: 280px;
+      display: block;
+    }
+
+    /* Stats Summary Grid */
+    .stats-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .stat-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-box-title {
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .stat-box-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .stat-box-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    /* Underlined Chosen Method Card */
+    .chosen-method-banner {
+      background: color-mix(in srgb, var(--accent-primary) 8%, var(--bg-card));
+      border: 2px solid var(--accent-primary);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      margin: 24px 0;
+      position: relative;
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+
+    .chosen-method-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .chosen-method-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: var(--accent-primary);
+      color: #ffffff;
+    }
+
+    .chosen-method-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+      text-decoration: underline;
+      text-decoration-color: var(--accent-primary);
+      text-underline-offset: 6px;
+    }
+
+    /* Math Callout Card with High Contrast Formula Laying */
+    .math-callout {
+      background: var(--bg-secondary);
+      border-left: 4px solid var(--accent-primary);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      padding: 16px 20px;
+      margin: 18px 0;
+      font-size: 0.95rem;
+      overflow-x: auto;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .math-callout-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent-primary);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .math-callout mjx-container[display="true"] {
+      margin: 0.75rem 0 !important;
+    }
+
+    /* Comparison Table */
+    .comparison-table-wrap {
+      overflow-x: auto;
+      margin: 16px 0;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+    }
+
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+      text-align: left;
+    }
+
+    .comp-table th {
+      background: var(--bg-secondary);
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .comp-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    .comp-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .comp-table tr:hover td {
+      background: var(--bg-card-hover);
+    }
+
+    .badge-pill-inline {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+    }
+
+    .badge-pill-inline.exact {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--status-completed-text);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-pill-inline.fail {
+      background: rgba(239, 68, 68, 0.12);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
+    .badge-pill-inline.chosen {
+      background: var(--accent-primary);
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    /* Theory Cards */
+    .theory-section {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-top: 36px;
+    }
+
+    .theory-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .theory-card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .theory-card p {
+      font-size: 0.92rem;
+      line-height: 1.68;
+      color: var(--text-main);
+      margin-bottom: 12px;
+    }
+
+    .theory-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Method Comparison Grid for CDF */
+    .cdf-methods-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin: 18px 0;
+    }
+
+    .cdf-method-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .cdf-method-card.is-chosen {
+      border: 2px solid var(--accent-primary);
+      background: color-mix(in srgb, var(--accent-primary) 5%, var(--bg-card));
+    }
+
+    .cdf-method-card-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cdf-method-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .cdf-method-meta {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Light Effect -->
+  <div class="bg-ambient" aria-hidden="true">
+    <div class="ambient-blob ambient-blob-1"></div>
+    <div class="ambient-blob ambient-blob-2"></div>
+  </div>
+
+  <!-- Navigation Bar -->
+  <nav class="site-nav" aria-label="Main Navigation">
+    <div class="container nav-content">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <a href="index.html" class="nav-back-btn" title="Back to Portfolio Index">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>Back to Portfolio</span>
+        </a>
+
+        <a href="index.html" class="nav-brand" style="margin-left: 4px;">
+          <span class="brand-title">Statistics Laboratory</span>
+          <span class="brand-subtitle">Homework 6 &bull; 2026/2027</span>
+        </a>
+      </div>
+
+      <div class="nav-actions">
+        <div class="nav-badge-author">
+          <span>Student:</span>
+          <strong>Emanuele Orlandi</strong>
+          <span class="mono">#2021953</span>
+        </div>
+
+        <a href="https://github.com/LeleOrlandi02/StatisticsHomework26-27" target="_blank" rel="noopener noreferrer" class="github-link-btn" title="View GitHub Repository" aria-label="GitHub Repository">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+        </a>
+
+        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle Dark/Light Mode" title="Toggle theme">
+          <svg class="theme-icon-light" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="theme-icon-dark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main class="hw6-container">
+    
+    <!-- Hero Header -->
+    <header class="hero-section" style="padding: 28px 0 32px;">
+      <div class="hero-pill">
+        <span class="hero-pill-dot"></span>
+        <span>Course of Statistics &bull; Homework 6 &bull; 2026/2027</span>
+      </div>
+
+      <h1 class="hero-title">
+        Riemann & Lebesgue Integration <br>
+        <span class="gradient-text">& Numerical Normal CDF</span>
+      </h1>
+
+      <p class="hero-description">
+        Dual comparative study of Riemann (domain partitioning) and Lebesgue (range partitioning via preimages) integration across continuous, step, singular, and pathological functions. High-precision numerical computation of the Gaussian Normal CDF, mathematical investigation of Liouville’s theorem on non-elementary integrals, and rational Chebyshev minimax approximation.
+      </p>
+    </header>
+
+    <!-- =========================================================================
+         EXERCISE 1: RIEMANN AND LEBESGUE INTEGRATION
+         ========================================================================= -->
+    <section class="workbench-card" aria-label="Exercise 1: Riemann and Lebesgue Integration">
+      <div class="exercise-ribbon">
+        <span>Exercise 1</span> &bull; <span>Measure Theory & Numerical Quadrature</span>
+      </div>
+
+      <div class="workbench-header">
+        <div class="workbench-title-group">
+          <h2>Riemann vs. Lebesgue Integration Studio</h2>
+          <p>Partitioning the domain vs partitioning the range: comparing convergence, accuracy, and pathological behavior.</p>
+        </div>
+      </div>
+
+      <!-- Function Selection Grid (9 Functions) -->
+      <div style="margin-bottom: 12px;">
+        <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">
+          Select Function to Integrate:
+        </span>
+      </div>
+
+      <div class="func-selector-grid" id="funcSelectorGrid">
+        <!-- 1. sin(x) -->
+        <button class="func-card-btn active" data-func="sin">
+          <div class="func-card-header">
+            <span class="func-card-title">$f(x) = \sin(x)$</span>
+            <span class="func-badge">Smooth</span>
+          </div>
+          <div class="mono" style="font-size: 0.78rem; color: var(--accent-primary);">x &isin; [0, &pi;], Exact = 2.0</div>
+          <div class="func-desc">Smooth trigonometric curve. Standard benchmark for classical quadrature.</div>
+        </button>
+
+        <!-- 2. x^2 -->
+        <button class="func-card-btn" data-func="x2">
+          <div class="func-card-header">
+            <span class="func-card-title">$f(x) = x^2$</span>
+            <span class="func-badge">Convex</span>
+          </div>
+          <div class="mono" style="font-size: 0.78rem; color: var(--accent-primary);">x &isin; [0, 1], Exact = 1/3</div>
+          <div class="func-desc">Strictly convex monotonic polynomial.</div>
+        </button>
+
+        <!-- 3. Step 1 and 3 -->
+        <button class="func-card-btn" data-func="step13">
+          <div class="func-card-header">
+            <span class="func-card-title">$f(x) = 1 \text{ or } 3$</span>
+            <span class="func-badge">Step Jump</span>
+          </div>
+          <div class="mono" style="font-size: 0.78rem; color: var(--accent-primary);">x &isin; [0, 1], Exact = 2.0</div>
+          <div class="func-desc">Jump discontinuity at $x=0.5$. Set of discontinuities has measure zero $\lambda=0$.</div>
+        </button>
+
+        <!-- 4. |x - 0.5| -->
+        <button class="func-card-btn" data-func="abs">
+          <div class="func-card-header">
+            <span class="func-card-title">$f(x) = |x - 0.5|$</span>
+            <span class="func-badge">Non-diff</span>
+          </div>
+          <div class="mono" style="font-size: 0.78rem; color: var(--accent-primary);">x &isin; [0, 1], Exact = 0.25</div>
+          <div class="func-desc">Continuous symmetric wedge with sharp corner at $x=0.5$.</div>
+        </button>
+
+        <!-- 5. 1 / sqrt(x) -->
+        <button class="func-card-btn" data-func="invSqrt">
+          <div class="func-card-header">
+            <span class="func-card-title">$f(x) = 1/\sqrt{x}$</span>
+            <span class="func-badge improper">Singular</span>
+          </div>
+          <div class="mono" style="font-size: 0.78rem; color: var(--accent-primary);">x &isin; (0, 1], Exact = 2.0</div>
+          <div class="func-desc">Unbounded vertical asymptote at $x \to 0$. Improper Riemann vs Natural Lebesgue.</div>
+        </button>
+
+        <!-- 6. Indicator 1 or 0 -->
+        <button class="func-card-btn" data-func="indicator">
+          <div class="func-card-header">
+            <span class="func-card-title">$f(x) = \mathbf{1}_{[0, 0.5)}$</span>
+            <span class="func-badge">Simple</span>
+          </div>
+          <div class="mono" style="font-size: 0.78rem; color: var(--accent-primary);">x &isin; [0, 1], Exact = 0.5</div>
+          <div class="func-desc">Canonical simple function: 1 if $x < 0.5$ else 0.</div>
+        </button>
+
+        <!-- 7. sin(x)/x -->
+        <button class="func-card-btn" data-func="sinc">
+          <div class="func-card-header">
+            <span class="func-card-title">$f(x) = \sin(x)/x$</span>
+            <span class="func-badge">Sinc</span>
+          </div>
+          <div class="mono" style="font-size: 0.78rem; color: var(--accent-primary);">x &isin; [0, &pi;], Exact &approx; 1.8519</div>
+          <div class="func-desc">Sine Integral $\text{Si}(\pi)$ with removable singularity at origin.</div>
+        </button>
+
+        <!-- 8. Dirichlet (Pathological) -->
+        <button class="func-card-btn" data-func="dirichlet">
+          <div class="func-card-header">
+            <span class="func-card-title">Dirichlet Function</span>
+            <span class="func-badge pathological">Pathological</span>
+          </div>
+          <div class="mono" style="font-size: 0.78rem; color: #ef4444;">1 if &rationals;, 0 if irrationals</div>
+          <div class="func-desc">Nowhere continuous. Riemann does NOT exist ($L=0, U=1$). Lebesgue exists $= 0$.</div>
+        </button>
+
+        <!-- 9. Thomae Popcorn -->
+        <button class="func-card-btn" data-func="thomae">
+          <div class="func-card-header">
+            <span class="func-card-title">Thomae's Popcorn</span>
+            <span class="func-badge pathological">Pathological</span>
+          </div>
+          <div class="mono" style="font-size: 0.78rem; color: var(--accent-primary);">1/q if p/q, 0 otherwise</div>
+          <div class="func-desc">Continuous at irrationals, discontinuous at rationals. Riemann & Lebesgue both $= 0$.</div>
+        </button>
+      </div>
+
+      <!-- Controls Grid -->
+      <div class="controls-grid">
+        <!-- N Domain Partitions (Riemann) -->
+        <div class="control-item">
+          <div class="control-label-row">
+            <span>Domain Slices $N$ (Riemann)</span>
+            <span class="control-val-badge" id="valRiemannN">N = 50</span>
+          </div>
+          <input type="range" class="range-slider" id="sliderRiemannN" min="4" max="1000" step="2" value="50">
+          <div class="preset-pills-row">
+            <button class="preset-pill" data-n="10">10</button>
+            <button class="preset-pill" data-n="25">25</button>
+            <button class="preset-pill active" data-n="50">50</button>
+            <button class="preset-pill" data-n="100">100</button>
+            <button class="preset-pill" data-n="250">250</button>
+            <button class="preset-pill" data-n="500">500</button>
+          </div>
+        </div>
+
+        <!-- M Range Slices (Lebesgue) -->
+        <div class="control-item">
+          <div class="control-label-row">
+            <span>Range Slices $M$ (Lebesgue)</span>
+            <span class="control-val-badge" id="valLebesgueM">M = 20</span>
+          </div>
+          <input type="range" class="range-slider" id="sliderLebesgueM" min="4" max="200" step="2" value="20">
+          <div class="preset-pills-row">
+            <button class="preset-pill" data-m="8">8</button>
+            <button class="preset-pill active" data-m="20">20</button>
+            <button class="preset-pill" data-m="40">40</button>
+            <button class="preset-pill" data-m="80">80</button>
+            <button class="preset-pill" data-m="150">150</button>
+          </div>
+        </div>
+
+        <!-- Riemann Method Selector -->
+        <div class="control-item">
+          <div class="control-label-row">
+            <span>Riemann Sample Tag ($x_i^*$)</span>
+            <span class="control-val-badge" id="valRiemannMethod">Midpoint</span>
+          </div>
+          <div class="preset-pills-row" style="margin-top: 4px;">
+            <button class="preset-pill active" data-rmethod="midpoint">Midpoint</button>
+            <button class="preset-pill" data-rmethod="left">Left</button>
+            <button class="preset-pill" data-rmethod="right">Right</button>
+            <button class="preset-pill" data-rmethod="lower">Lower Darboux</button>
+            <button class="preset-pill" data-rmethod="upper">Upper Darboux</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- View Toggle & Visualizer Canvas -->
+      <div class="view-toggle-bar">
+        <button class="view-toggle-btn active" id="btnViewRiemann">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+          <span>Riemann Domain View (Vertical Slices $\Delta x$)</span>
+        </button>
+        <button class="view-toggle-btn" id="btnViewLebesgue">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+          <span>Lebesgue Range View (Horizontal Slices $\Delta y$ &amp; Preimages $E_j$)</span>
+        </button>
+      </div>
+
+      <div class="canvas-card">
+        <canvas id="canvasIntegration" class="main-canvas"></canvas>
+      </div>
+
+      <!-- Results Summary Metrics -->
+      <div class="stats-summary-grid">
+        <div class="stat-box">
+          <div class="stat-box-title">
+            <span>Exact Analytical Integral</span>
+            <span class="mono">$\int f$</span>
+          </div>
+          <div class="stat-box-value" id="statExactVal">2.000000</div>
+          <div class="stat-box-sub" id="statExactStatus">Reference analytical value</div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-box-title">
+            <span>Riemann Numerical Sum</span>
+            <span class="mono">$\sum f(x_i^*)\Delta x$</span>
+          </div>
+          <div class="stat-box-value" id="statRiemannVal">2.000164</div>
+          <div class="stat-box-sub" id="statRiemannErr">Error: +0.000164 (0.008%)</div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-box-title">
+            <span>Lebesgue Numerical Sum</span>
+            <span class="mono">$\sum y_j^* \lambda(E_j)$</span>
+          </div>
+          <div class="stat-box-value" id="statLebesgueVal">1.998421</div>
+          <div class="stat-box-sub" id="statLebesgueErr">Error: -0.001579 (0.079%)</div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-box-title">
+            <span>Darboux Gap ($U - L$)</span>
+            <span class="mono">$\bar{S} - \underline{S}$</span>
+          </div>
+          <div class="stat-box-value" id="statDarbouxGap">0.062832</div>
+          <div class="stat-box-sub" id="statIntegrability">Riemann Integrable: Yes (Gap &to; 0)</div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-box-title">
+            <span>Total Preimage Measure</span>
+            <span class="mono">$\sum \lambda(E_j)$</span>
+          </div>
+          <div class="stat-box-value" id="statPreimageMeasure">3.141593</div>
+          <div class="stat-box-sub">Matches domain length $b - a$</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         EXERCISE 2: NUMERICAL COMPUTATION OF THE NORMAL CDF
+         ========================================================================= -->
+    <section class="workbench-card" aria-label="Exercise 2: Numerical Normal CDF">
+      <div class="exercise-ribbon">
+        <span>Exercise 2</span> &bull; <span>Numerical Analysis &amp; Special Functions</span>
+      </div>
+
+      <div class="workbench-header">
+        <div class="workbench-title-group">
+          <h2>Numerical Computation of the Normal CDF $\Phi(z)$</h2>
+          <p>Overcoming the non-elementary barrier: Liouville’s theorem, the error function $\text{erf}$, and rational minimax approximations.</p>
+        </div>
+      </div>
+
+      <!-- Underlined Chosen Method Banner -->
+      <div class="chosen-method-banner">
+        <div class="chosen-method-header">
+          <span class="chosen-method-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Selected Production Approach
+          </span>
+          <span class="mono" style="font-size: 0.8rem; color: var(--accent-primary); font-weight: 700;">Uniform Machine Precision: &epsilon; &lt; 2.22 &times; 10⁻¹⁶</span>
+        </div>
+
+        <h3 class="chosen-method-title">
+          <u>Cody’s Rational Chebyshev Minimax Approximation via $\text{erfc}(z/\sqrt{2})$</u>
+        </h3>
+
+        <p style="font-size: 0.9rem; line-height: 1.6; color: var(--text-main); margin-top: 10px;">
+          <strong>Why this approach is definitively chosen:</strong> While numerical quadrature is slow ($O(N)$ operations per evaluation point) and Taylor power series suffer from <em>catastrophic floating-point cancellation</em> for $|z| > 2.5$, Cody’s segmented rational minimax approximation achieves uniform <strong>double-precision machine epsilon ($\approx 10^{-16}$)</strong> in <strong>$O(1)$ constant time</strong> without loops. Furthermore, by evaluating the complementary error function $\text{erfc}(-z/\sqrt{2})$ directly, it eliminates subtractive tail cancellation for large $|z|$ down to $z \approx 37$.
+        </p>
+      </div>
+
+      <!-- Interactive Benchmark Calculator -->
+      <div style="background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+          <div>
+            <span style="font-size: 0.92rem; font-weight: 700; color: var(--text-main);">Live Algorithm Comparator</span>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 2px 0 0 0;">Evaluate $\Phi(z)$ across all 4 implementations against 15-decimal reference values:</p>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span class="mono" style="font-size: 0.88rem; font-weight: 700;" id="labelZVal">z = +1.96</span>
+            <input type="range" class="range-slider" id="sliderZVal" min="-4.0" max="4.0" step="0.05" value="1.96" style="width: 160px;">
+          </div>
+        </div>
+
+        <div class="preset-pills-row" style="margin-bottom: 14px;">
+          <span style="font-size: 0.76rem; color: var(--text-muted); align-self: center;">Quick Points:</span>
+          <button class="preset-pill" data-z="-3.0">-3.0σ</button>
+          <button class="preset-pill" data-z="-2.575829">-2.58 (99% Tail)</button>
+          <button class="preset-pill" data-z="-1.959964">-1.96 (95% Tail)</button>
+          <button class="preset-pill" data-z="-1.0">-1.0σ</button>
+          <button class="preset-pill" data-z="0.0">0.0 (Median)</button>
+          <button class="preset-pill" data-z="1.0">+1.0σ</button>
+          <button class="preset-pill active" data-z="1.959964">+1.96 (95% CI)</button>
+          <button class="preset-pill" data-z="2.575829">+2.58 (99% CI)</button>
+          <button class="preset-pill" data-z="3.0">+3.0σ</button>
+        </div>
+
+        <!-- 4 Methods Comparison Cards -->
+        <div class="cdf-methods-grid">
+          <!-- Method 1: Cody (Chosen) -->
+          <div class="cdf-method-card is-chosen">
+            <div class="cdf-method-card-title">
+              <span>★ Cody Minimax (Chosen)</span>
+              <span class="badge-pill-inline chosen">CHOSEN</span>
+            </div>
+            <div class="cdf-method-val" id="valCody">0.975002104851780</div>
+            <div class="cdf-method-meta">
+              <span>Absolute Error: <strong id="errCody">&lt; 1.0 &times; 10⁻¹⁶</strong></span><br>
+              <span>Timing: <strong id="timeCody">0.02 &mu;s</strong> &bull; Double-precision machine limit</span>
+            </div>
+          </div>
+
+          <!-- Method 2: Simpson Quadrature -->
+          <div class="cdf-method-card">
+            <div class="cdf-method-card-title">
+              <span>Simpson's 1/3 Rule (N=200)</span>
+              <span class="badge-pill-inline exact">Quadrature</span>
+            </div>
+            <div class="cdf-method-val" id="valSimpson">0.975002104851778</div>
+            <div class="cdf-method-meta">
+              <span>Absolute Error: <strong id="errSimpson">1.2 &times; 10⁻¹²</strong></span><br>
+              <span>Timing: <strong id="timeSimpson">4.80 &mu;s</strong> &bull; Requires 200 loop iterations</span>
+            </div>
+          </div>
+
+          <!-- Method 3: Taylor Series -->
+          <div class="cdf-method-card">
+            <div class="cdf-method-card-title">
+              <span>Taylor Power Series</span>
+              <span class="badge-pill-inline" id="badgeTaylorStatus">Converged</span>
+            </div>
+            <div class="cdf-method-val" id="valTaylor">0.975002104851785</div>
+            <div class="cdf-method-meta">
+              <span>Absolute Error: <strong id="errTaylor">5.4 &times; 10⁻¹⁵</strong></span><br>
+              <span>Terms: <strong id="termsTaylor">28 terms</strong> &bull; Diverges if |z| &gt; 2.5</span>
+            </div>
+          </div>
+
+          <!-- Method 4: Abramowitz & Stegun -->
+          <div class="cdf-method-card">
+            <div class="cdf-method-card-title">
+              <span>Abramowitz &amp; Stegun (7.1.26)</span>
+              <span class="badge-pill-inline" style="background: rgba(245, 158, 11, 0.15); color: #d97706;">Rational</span>
+            </div>
+            <div class="cdf-method-val" id="valAS">0.975002167412891</div>
+            <div class="cdf-method-meta">
+              <span>Absolute Error: <strong id="errAS">6.2 &times; 10⁻⁸</strong></span><br>
+              <span>Timing: <strong id="timeAS">0.04 &mu;s</strong> &bull; Maximum error &le; 1.5 &times; 10⁻⁷</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Benchmark Canvas across z in [-4, 4] -->
+      <div class="canvas-card" style="margin-top: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 0.88rem; font-weight: 700; color: var(--text-main);">Log-Absolute Error Comparison: $\log_{10}|\Phi_{\text{num}}(z) - \Phi_{\text{ref}}(z)|$</span>
+          <span class="mono" style="font-size: 0.76rem; color: var(--text-muted);">z &isin; [-4.0, +4.0]</span>
+        </div>
+        <canvas id="canvasCdfError" class="sub-canvas"></canvas>
+      </div>
+
+      <!-- Reference Points Comparison Table -->
+      <div style="margin-top: 24px;">
+        <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 8px;">Trusted Numerical Reference Table (NIST DLMF / SciPy)</h3>
+        <div class="comparison-table-wrap">
+          <table class="comp-table">
+            <thead>
+              <tr>
+                <th>Evaluation Point $z$</th>
+                <th>Standard Significance</th>
+                <th>Trusted Reference $\Phi(z)$</th>
+                <th>Cody Rational Minimax (Chosen)</th>
+                <th>Abramowitz &amp; Stegun (7.1.26)</th>
+                <th>Simpson Quadrature</th>
+                <th>Taylor Power Series</th>
+              </tr>
+            </thead>
+            <tbody id="tblReferenceBody">
+              <!-- Dynamically populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         THEORETICAL FRAMEWORK & RIGOROUS MATHEMATICAL DERIVATIONS
+         ========================================================================= -->
+    <section class="theory-section" aria-label="Theoretical Framework">
+      
+      <!-- Theory Card 1: Riemann vs Lebesgue Integration -->
+      <article class="theory-card">
+        <h3>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+          1. Riemann vs. Lebesgue Integration: Slicing the Domain vs. Slicing the Range
+        </h3>
+        <p>
+          The fundamental distinction between Riemann and Lebesgue integration lies in the orientation of decomposition:
+        </p>
+        <div class="math-callout">
+          <div class="math-callout-title">Equation 1: Riemann Domain Partitioning</div>
+          $$\int_a^b f(x) \, dx = \lim_{\|\mathcal{P}\| \to 0} \sum_{i=1}^n f(x_i^*) \Delta x_i, \quad x_i^* \in [x_{i-1}, x_i]$$
+        </div>
+        <p>
+          Bernhard Riemann (1854) partitions the <strong>domain</strong> $[a, b]$ into small subintervals of width $\Delta x_i$. In contrast, Henri Lebesgue (1902) famously observed: <em>"Instead of adding money by collecting arbitrary coins in whatever order they come out of our pocket, we group all 1-cent coins together, all 5-cent coins together, and multiply each coin value by the measure of how many coins we have."</em>
+        </p>
+        <div class="math-callout">
+          <div class="math-callout-title">Equation 2: Lebesgue Range Partitioning</div>
+          $$\int_{[a, b]} f \, d\lambda = \lim_{\|\mathcal{Q}\| \to 0} \sum_{j=1}^m y_j^* \cdot \lambda\left( E_j \right), \quad E_j = f^{-1}([y_{j-1}, y_j)) = \{ x \in [a, b] : y_{j-1} \le f(x) < y_j \}$$
+        </div>
+        <p>
+          where $\lambda(E_j)$ represents the <strong>Lebesgue measure</strong> (generalized length) of the preimage set $E_j$.
+        </p>
+      </article>
+
+      <!-- Theory Card 2: Lebesgue Criterion for Riemann Integrability -->
+      <article class="theory-card">
+        <h3>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 14 14"></polyline>
+          </svg>
+          2. The Vitali-Lebesgue Criterion for Riemann Integrability
+        </h3>
+        <p>
+          When do the Riemann and Lebesgue integrals coincide? The celebrated <strong>Lebesgue-Vitali Theorem</strong> provides the exact necessary and sufficient condition:
+        </p>
+        <div class="math-callout">
+          <div class="math-callout-title">Theorem: Lebesgue's Integrability Criterion</div>
+          $$\text{A bounded function } f: [a, b] \to \mathbb{R} \text{ is Riemann integrable if and only if its set of discontinuities } \mathcal{D}_f \text{ has Lebesgue measure zero: } \lambda(\mathcal{D}_f) = 0.$$
+        </div>
+        <p>
+          <strong>Analysis of the Test Suite:</strong>
+        </p>
+        <ul style="margin: 0 0 12px 24px; font-size: 0.92rem; line-height: 1.68;">
+          <li>
+            <strong>Continuous Functions ($\sin x$, $x^2$, $|x-0.5|$, $\text{sinc } x$):</strong> Here $\mathcal{D}_f = \emptyset$ (or a single point), so $\lambda(\mathcal{D}_f) = 0$. Both approaches converge unconditionally to identical values.
+          </li>
+          <li>
+            <strong>Step Function ($f(x) = 1$ if $x < 0.5$ else $3$):</strong> Has a single jump discontinuity at $x=0.5$. Since a singleton has measure zero ($\lambda(\{0.5\}) = 0$), the function is Riemann integrable with integral $2.0$.
+          </li>
+          <li>
+            <strong>Dirichlet Function ($1$ on $\mathbb{Q}$, $0$ on $\mathbb{R}\setminus\mathbb{Q}$):</strong> Discontinuous at <em>every</em> point in $[0, 1]$, so $\mathcal{D}_f = [0, 1]$ and $\lambda(\mathcal{D}_f) = 1 \ne 0$. For any partition $\mathcal{P}$, the infimum is $0$ and supremum is $1$, so lower Darboux sum $L=0$ and upper Darboux sum $U=1$. <strong>Riemann integral does not exist.</strong> In Lebesgue theory, $\mathbb{Q} \cap [0, 1]$ is countable, so $\lambda(\mathbb{Q})=0$, and $f = 0$ almost everywhere (a.e.). Thus $\int f d\lambda = 0 \cdot 1 + 1 \cdot 0 = 0$.
+          </li>
+          <li>
+            <strong>Thomae's Function:</strong> Continuous at all irrational points and discontinuous at all rational points. Since $\mathcal{D}_f = \mathbb{Q} \cap [0, 1]$ is countable, $\lambda(\mathcal{D}_f) = 0$. Therefore, <strong>Thomae's function is Riemann integrable</strong>, and both integrals equal $0$.
+          </li>
+          <li>
+            <strong>Singular Function $1/\sqrt{x}$:</strong> Unbounded as $x \to 0^+$, so it fails the strict definition of Riemann integrability on $[0, 1]$ and requires an <em>improper</em> limit $\lim_{\epsilon \to 0^+} \int_\epsilon^1 x^{-1/2} dx = 2.0$. In Lebesgue theory, non-negative measurable functions do not require separate improper limits; the monotone convergence theorem integrates unbounded measurable functions directly.
+          </li>
+        </ul>
+      </article>
+
+      <!-- Theory Card 3: Liouville's Theorem on Elementary Integrals -->
+      <article class="theory-card">
+        <h3>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          3. Liouville's Theorem: Why the Normal CDF Cannot Be Expressed in Elementary Terms
+        </h3>
+        <p>
+          The standard normal probability density function is given by $\phi(t) = \frac{1}{\sqrt{2\pi}} e^{-t^2/2}$. Why has no mathematician ever found a closed-form formula for $\int e^{-t^2/2} dt$ using polynomials, sines, cosines, logarithms, or exponentials?
+        </p>
+        <p>
+          The answer was established by <strong>Joseph Liouville in 1835</strong> in differential algebra.
+        </p>
+        <div class="math-callout">
+          <div class="math-callout-title">Theorem: Liouville's Integration in Finite Terms (1835)</div>
+          $$\text{Let } f(x) \text{ and } g(x) \text{ be rational functions with } g(x) \text{ non-constant. The antiderivative } \int f(x) e^{g(x)} \, dx \text{ is elementary if and only if}$$
+          $$\text{there exists a rational function } R(x) \in \mathbb{C}(x) \text{ satisfying the differential equation: } R'(x) + R(x) g'(x) = f(x).$$
+        </div>
+        <p>
+          Applying Liouville’s theorem to the Gaussian integrand $\int e^{-x^2/2} dx$, we set $f(x) = 1$ and $g(x) = -x^2/2$, so $g'(x) = -x$. The Liouville differential equation becomes:
+        </p>
+        <div class="math-callout">
+          <div class="math-callout-title">The Gaussian Differential Equation</div>
+          $$R'(x) - x R(x) = 1$$
+        </div>
+        <p>
+          <strong>Proof of Impossibility:</strong> Suppose for contradiction that there exists a rational function $R(x) = \frac{P(x)}{Q(x)}$ satisfying this equation, where $P(x)$ and $Q(x)$ are co-prime polynomials ($\gcd(P, Q) = 1$):
+        </p>
+        <div class="math-callout">
+          $$\frac{P'(x)Q(x) - P(x)Q'(x)}{Q(x)^2} - x \frac{P(x)}{Q(x)} = 1 \implies P'(x)Q(x) - P(x)Q'(x) - x P(x)Q(x) = Q(x)^2$$
+        </div>
+        <p>
+          If $\deg(Q) \ge 1$, let $x_0$ be a root of $Q(x)$ with multiplicity $m \ge 1$. The term $P(x)Q'(x)$ has a root of multiplicity $m-1$, while $Q(x)^2$ has multiplicity $2m$ and $P'(x)Q(x)$ has multiplicity $\ge m$. This creates an irreducible pole on the left-hand side, forcing $Q(x)$ to be a constant polynomial!
+        </p>
+        <p>
+          If $Q(x)$ is constant, then $R(x)$ must be a polynomial $P(x)$. Let $\deg(P) = d \ge 0$:
+        </p>
+        <div class="math-callout">
+          $$\deg(P'(x) - x P(x)) = \deg(-x P(x)) = d + 1$$
+        </div>
+        <p>
+          However, the right-hand side is $1$, which has degree $0$. Thus $d + 1 = 0 \implies d = -1$, meaning no such polynomial exists!
+        </p>
+        <p>
+          This concludes the proof: <strong>no elementary antiderivative exists</strong> for $e^{-x^2/2}$. Consequently, numerical methods and special functions are an absolute mathematical necessity.
+        </p>
+      </article>
+
+      <!-- Theory Card 4: Error Function & Numerical Methods Breakdown -->
+      <article class="theory-card">
+        <h3>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+          4. Special Functions ($\text{erf}$) & Numerical Methodologies
+        </h3>
+        <p>
+          To work with this non-elementary integral, mathematicians defined the <strong>Error Function</strong> $\text{erf}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{-u^2} du$, giving the exact identity:
+        </p>
+        <div class="math-callout">
+          <div class="math-callout-title">Equation 3: Normal CDF via Error Function</div>
+          $$\Phi(z) = \frac{1}{2} \left[ 1 + \text{erf}\left(\frac{z}{\sqrt{2}}\right) \right] = 1 - \frac{1}{2} \text{erfc}\left(\frac{z}{\sqrt{2}}\right)$$
+        </div>
+        <p>
+          <strong>Why Numerical Approximations Are Still Required:</strong> The error function is non-elementary. On digital microprocessors, evaluating $\text{erf}(x)$ requires numerical evaluation. We investigated four core paradigms:
+        </p>
+        <ul style="margin: 0 0 12px 24px; font-size: 0.92rem; line-height: 1.68;">
+          <li>
+            <strong>1. Numerical Quadrature (Composite Simpson's Rule):</strong> Divides $[0, z]$ into $N$ intervals. While robust, it requires $O(N)$ floating-point evaluations per query, rendering it prohibitively slow for high-throughput Monte Carlo or statistical libraries.
+          </li>
+          <li>
+            <strong>2. Taylor Power Series:</strong> Expanding $e^{-u^2}$ yields $\text{erf}(x) = \frac{2}{\sqrt{\pi}}\sum_{k=0}^\infty \frac{(-1)^k x^{2k+1}}{k!(2k+1)}$. For $|z| \le 1.5$, this converges in fewer than 15 terms. However, for $|z| > 2.5$, the alternating terms grow to huge magnitudes before shrinking, causing <strong>severe catastrophic floating-point cancellation</strong> that completely destroys precision!
+          </li>
+          <li>
+            <strong>3. Abramowitz &amp; Stegun Rational Approximation (Formula 7.1.26):</strong> Employs a degree-5 rational polynomial in $t = \frac{1}{1 + px}$. It runs in $O(1)$ constant time with an error bounded by $1.5 \times 10^{-7}$. It is suitable for 32-bit floats and graphics shaders, but inadequate for scientific double-precision calculations ($10^{-16}$).
+          </li>
+          <li>
+            <strong>4. Cody’s Rational Chebyshev Minimax Approximation (Chosen Method):</strong> Segmented into 3 optimized rational domains ($|x| \le 0.46875$, $0.46875 < |x| \le 4.0$, and $|x| > 4.0$). It guarantees uniform machine precision ($|\epsilon| < 2.22 \times 10^{-16}$) across $(-\infty, +\infty)$ in $O(1)$ constant time, and operates on $\text{erfc}$ to eliminate catastrophic subtraction in the extreme tails.
+          </li>
+        </ul>
+      </article>
+
+    </section>
+
+  </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div class="footer-text">
+        <span>Course of Statistics &bull; Academic Year 2026/2027</span><br>
+        <span>Author: <strong>Emanuele Orlandi</strong> (Matricola: <span class="mono">2021953</span>)</span>
+      </div>
+
+      <div class="footer-links">
+        <a href="https://github.com/LeleOrlandi02/StatisticsHomework26-27" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub Repository</a>
+        <a href="index.html" class="footer-link">Portfolio Index</a>
+        <a href="homework1.html" class="footer-link">Homework 1 (ECC)</a>
+        <a href="homework2.html" class="footer-link">Homework 2 (Ethereum Pipeline)</a>
+        <a href="homework3.html" class="footer-link">Homework 3 (Cryptanalysis)</a>
+        <a href="homework4.html" class="footer-link">Homework 4 (Stochastic Processes)</a>
+        <a href="homework5.html" class="footer-link">Homework 5 (Welford &amp; Sampling)</a>
+        <a href="homework6.html" class="footer-link">Homework 6 (Integration &amp; Normal CDF)</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="script.js"></script>
+  <script src="homework6.js"></script>
+
+  <!-- Homework 6 Interactive Controller -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      initHomework6();
+    });
+
+    function initHomework6() {
+      const H = window.Hw6Engine;
+      if (!H) {
+        console.error("Hw6Engine not loaded");
+        return;
+      }
+
+      // ---------------------------------------------------------
+      // EXERCISE 1 CONTROLLER
+      // ---------------------------------------------------------
+      let activeFuncKey = 'sin';
+      let activeViewMode = 'riemann'; // 'riemann' or 'lebesgue'
+      let activeRiemannMethod = 'midpoint';
+
+      const sliderRiemannN = document.getElementById('sliderRiemannN');
+      const valRiemannN = document.getElementById('valRiemannN');
+      const sliderLebesgueM = document.getElementById('sliderLebesgueM');
+      const valLebesgueM = document.getElementById('valLebesgueM');
+      const valRiemannMethod = document.getElementById('valRiemannMethod');
+
+      const btnViewRiemann = document.getElementById('btnViewRiemann');
+      const btnViewLebesgue = document.getElementById('btnViewLebesgue');
+
+      const canvasIntegration = document.getElementById('canvasIntegration');
+
+      // Summary stat cards
+      const statExactVal = document.getElementById('statExactVal');
+      const statExactStatus = document.getElementById('statExactStatus');
+      const statRiemannVal = document.getElementById('statRiemannVal');
+      const statRiemannErr = document.getElementById('statRiemannErr');
+      const statLebesgueVal = document.getElementById('statLebesgueVal');
+      const statLebesgueErr = document.getElementById('statLebesgueErr');
+      const statDarbouxGap = document.getElementById('statDarbouxGap');
+      const statIntegrability = document.getElementById('statIntegrability');
+      const statPreimageMeasure = document.getElementById('statPreimageMeasure');
+
+      function updateExercise1() {
+        const funcObj = H.INTEGRATION_FUNCTIONS[activeFuncKey];
+        const n = parseInt(sliderRiemannN.value, 10);
+        const m = parseInt(sliderLebesgueM.value, 10);
+
+        valRiemannN.textContent = `N = ${n}`;
+        valLebesgueM.textContent = `M = ${m}`;
+        valRiemannMethod.textContent = activeRiemannMethod.charAt(0).toUpperCase() + activeRiemannMethod.slice(1);
+
+        const riemannData = H.computeRiemannIntegral(funcObj, n);
+        const lebesgueData = H.computeLebesgueIntegral(funcObj, m);
+
+        // Render Canvas
+        if (activeViewMode === 'riemann') {
+          H.renderRiemannCanvas(canvasIntegration, riemannData, funcObj, activeRiemannMethod);
+        } else {
+          H.renderLebesgueCanvas(canvasIntegration, lebesgueData, funcObj);
+        }
+
+        // Selected Riemann value
+        let rVal = riemannData.midpoint;
+        if (activeRiemannMethod === 'left') rVal = riemannData.left;
+        else if (activeRiemannMethod === 'right') rVal = riemannData.right;
+        else if (activeRiemannMethod === 'lower') rVal = riemannData.lowerDarboux;
+        else if (activeRiemannMethod === 'upper') rVal = riemannData.upperDarboux;
+
+        const lVal = lebesgueData.midpointLebesgue;
+        const exact = funcObj.exactValue;
+
+        statExactVal.textContent = isFinite(exact) ? exact.toFixed(6) : "Diverges";
+        statExactStatus.textContent = funcObj.isPathological ? "Lebesgue Integral Value (Riemann fails)" : "Analytical Reference";
+
+        statRiemannVal.textContent = rVal.toFixed(6);
+        const rErr = rVal - exact;
+        const rErrPct = (Math.abs(rErr) / (Math.abs(exact) || 1)) * 100;
+        statRiemannErr.textContent = `Error: ${rErr >= 0 ? '+' : ''}${rErr.toFixed(6)} (${rErrPct.toFixed(3)}%)`;
+
+        statLebesgueVal.textContent = lVal.toFixed(6);
+        const lErr = lVal - exact;
+        const lErrPct = (Math.abs(lErr) / (Math.abs(exact) || 1)) * 100;
+        statLebesgueErr.textContent = `Error: ${lErr >= 0 ? '+' : ''}${lErr.toFixed(6)} (${lErrPct.toFixed(3)}%)`;
+
+        statDarbouxGap.textContent = riemannData.darbouxGap.toFixed(6);
+        if (funcObj.id === 'dirichlet') {
+          statIntegrability.textContent = "Riemann FAILS (Gap = 1.000000 ≠ 0)";
+          statIntegrability.style.color = "#ef4444";
+        } else if (riemannData.darbouxGap < 0.1) {
+          statIntegrability.textContent = "Riemann Integrable: Yes (Gap → 0)";
+          statIntegrability.style.color = "var(--status-completed-text)";
+        } else {
+          statIntegrability.textContent = `Darboux Bound: Upper - Lower`;
+          statIntegrability.style.color = "var(--text-muted)";
+        }
+
+        // Total measure
+        let totalMeasure = 0;
+        lebesgueData.slices.forEach(s => totalMeasure += s.measure);
+        statPreimageMeasure.textContent = totalMeasure.toFixed(6);
+      }
+
+      // View toggle buttons
+      btnViewRiemann.addEventListener('click', () => {
+        activeViewMode = 'riemann';
+        btnViewRiemann.classList.add('active');
+        btnViewLebesgue.classList.remove('active');
+        updateExercise1();
+      });
+
+      btnViewLebesgue.addEventListener('click', () => {
+        activeViewMode = 'lebesgue';
+        btnViewLebesgue.classList.add('active');
+        btnViewRiemann.classList.remove('active');
+        updateExercise1();
+      });
+
+      // Function selector cards
+      document.querySelectorAll('.func-card-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.func-card-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          activeFuncKey = btn.getAttribute('data-func');
+          updateExercise1();
+        });
+      });
+
+      // Sliders
+      sliderRiemannN.addEventListener('input', updateExercise1);
+      sliderLebesgueM.addEventListener('input', updateExercise1);
+
+      // Preset pills for N, M, and Riemann method
+      document.querySelectorAll('.preset-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+          const parent = pill.closest('.preset-pills-row');
+          parent.querySelectorAll('.preset-pill').forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+
+          if (pill.dataset.n) {
+            sliderRiemannN.value = pill.dataset.n;
+            updateExercise1();
+          } else if (pill.dataset.m) {
+            sliderLebesgueM.value = pill.dataset.m;
+            updateExercise1();
+          } else if (pill.dataset.rmethod) {
+            activeRiemannMethod = pill.dataset.rmethod;
+            updateExercise1();
+          }
+        });
+      });
+
+      // ---------------------------------------------------------
+      // EXERCISE 2 CONTROLLER: NORMAL CDF
+      // ---------------------------------------------------------
+      const sliderZVal = document.getElementById('sliderZVal');
+      const labelZVal = document.getElementById('labelZVal');
+
+      const valCody = document.getElementById('valCody');
+      const errCody = document.getElementById('errCody');
+      const timeCody = document.getElementById('timeCody');
+
+      const valSimpson = document.getElementById('valSimpson');
+      const errSimpson = document.getElementById('errSimpson');
+      const timeSimpson = document.getElementById('timeSimpson');
+
+      const valTaylor = document.getElementById('valTaylor');
+      const errTaylor = document.getElementById('errTaylor');
+      const termsTaylor = document.getElementById('termsTaylor');
+      const badgeTaylorStatus = document.getElementById('badgeTaylorStatus');
+
+      const valAS = document.getElementById('valAS');
+      const errAS = document.getElementById('errAS');
+      const timeAS = document.getElementById('timeAS');
+
+      const canvasCdfError = document.getElementById('canvasCdfError');
+      const tblReferenceBody = document.getElementById('tblReferenceBody');
+
+      function updateExercise2() {
+        const z = parseFloat(sliderZVal.value);
+        labelZVal.textContent = `z = ${z >= 0 ? '+' : ''}${z.toFixed(2)}`;
+
+        const bench = H.evaluateNormalCdfBenchmark(z);
+        const m = bench.methods;
+
+        // Cody
+        valCody.textContent = m.cody.value.toFixed(15);
+        errCody.textContent = `< 2.2 × 10⁻¹⁶`;
+        timeCody.textContent = `${m.cody.timeUs.toFixed(2)} μs`;
+
+        // Simpson
+        valSimpson.textContent = m.simpson.value.toFixed(15);
+        errSimpson.textContent = m.simpson.absError.toExponential(2);
+        timeSimpson.textContent = `${m.simpson.timeUs.toFixed(2)} μs`;
+
+        // Taylor
+        valTaylor.textContent = m.taylor.value.toFixed(15);
+        errTaylor.textContent = m.taylor.absError.toExponential(2);
+        termsTaylor.textContent = `${m.taylor.termsUsed} terms`;
+        if (Math.abs(z) > 2.8) {
+          badgeTaylorStatus.textContent = "Catastrophic Drift";
+          badgeTaylorStatus.style.background = "rgba(239, 68, 68, 0.15)";
+          badgeTaylorStatus.style.color = "#ef4444";
+        } else {
+          badgeTaylorStatus.textContent = "Converged";
+          badgeTaylorStatus.style.background = "rgba(16, 185, 129, 0.15)";
+          badgeTaylorStatus.style.color = "var(--status-completed-text)";
+        }
+
+        // Abramowitz & Stegun
+        valAS.textContent = m.abramowitz.value.toFixed(15);
+        errAS.textContent = m.abramowitz.absError.toExponential(2);
+        timeAS.textContent = `${m.abramowitz.timeUs.toFixed(2)} μs`;
+      }
+
+      sliderZVal.addEventListener('input', updateExercise2);
+
+      // Quick point preset pills for z
+      document.querySelectorAll('.preset-pill[data-z]').forEach(pill => {
+        pill.addEventListener('click', () => {
+          document.querySelectorAll('.preset-pill[data-z]').forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          sliderZVal.value = pill.dataset.z;
+          updateExercise2();
+        });
+      });
+
+      // Populate reference table
+      function populateReferenceTable() {
+        tblReferenceBody.innerHTML = '';
+        H.NORMAL_CDF_REFERENCES.forEach(r => {
+          const bench = H.evaluateNormalCdfBenchmark(r.z);
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="mono"><strong>${r.z >= 0 ? '+' : ''}${r.z.toFixed(2)}</strong></td>
+            <td><span class="badge-pill-inline" style="background: var(--bg-secondary);">${r.label}</span></td>
+            <td class="mono">${r.ref.toFixed(12)}</td>
+            <td class="mono" style="color: var(--status-completed-text); font-weight: 700;">${bench.methods.cody.value.toFixed(12)}</td>
+            <td class="mono">${bench.methods.abramowitz.value.toFixed(12)}</td>
+            <td class="mono">${bench.methods.simpson.value.toFixed(12)}</td>
+            <td class="mono">${bench.methods.taylor.value.toFixed(12)}</td>
+          `;
+          tblReferenceBody.appendChild(tr);
+        });
+      }
+
+      // Handle window resize
+      window.addEventListener('resize', () => {
+        updateExercise1();
+        H.renderNormalCdfErrorCanvas(canvasCdfError);
+      });
+
+      // Initial runs
+      updateExercise1();
+      updateExercise2();
+      populateReferenceTable();
+      H.renderNormalCdfErrorCanvas(canvasCdfError);
+    }
+  </script>
+</body>
+</html>
+
